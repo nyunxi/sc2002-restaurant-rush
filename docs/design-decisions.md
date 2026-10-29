@@ -1,7 +1,7 @@
 # Design decisions
 
 > Status: DRAFT proposal for the Phase 0 session. Everything below is to be confirmed or changed by the group.
-> Scope: Stage 1 only. No Stage 2 or 3 classes, fields or placeholders.
+> Scope: Stage 1. Every class listed below is part of Stage 1 and must be implemented. Nothing from Stage 2 or 3 (VIP, Critic, Host, ComboMeal, Happy Hour) appears, not even as a placeholder.
 
 ## Roles
 
@@ -35,7 +35,7 @@ All classes are in package `restaurantrush` (folder `src/restaurantrush/`).
 Design choices to note (useful later for the design discussion):
 - Staff are entities that perform actions; GameController decides when they act. Alternative considered: putting all action logic in GameController (rejected: one huge class, low cohesion).
 - Waiter, Chef and Cashier do not share a superclass in Stage 1. Their actions have nothing in common yet, and the brief says not to create abstractions just to satisfy a checklist.
-- Lists returned to the UI are unmodifiable (`Collections.unmodifiableList`), so the UI can read state but not change it (encapsulation).
+- Lists returned to the UI are unmodifiable (`Collections.unmodifiableList`), so the UI cannot add or remove customers or tables. This does NOT stop the UI calling mutating methods on the objects inside the list (e.g. `customer.markPaid()`). Stage 1 rule: ConsoleUI only calls getters on objects it receives. Alternative to decide in the session: return read-only interfaces to the UI (e.g. `CustomerView` with getters only), which enforces this in code (ISP) at the cost of extra types.
 
 ## Enums
 
@@ -65,8 +65,8 @@ Customers in WAITING, SEATED or ORDERED lose satisfaction at turn end. EATING an
 | 2 Manager choices | Waiter: seat / take order / serve / wait. Then Chef: prepare / wait | `ConsoleUI` asks, `GameController` calls `Waiter` / `Chef` | D, C |
 | 3 Kitchen and serving | Waiter acts first, then Chef. An order becomes READY when its last unit is done. Serving needs READY at the moment the Waiter acts | `Waiter`, `Chef`, `Order` | C, B |
 | 4 Eating and payment | EATING customers served on an earlier turn become READY_TO_PAY. Cashier pays the oldest customer who became READY_TO_PAY on an earlier turn. Revenue updated, order and customer PAID, table freed | `GameController.endTurn()`, `Customer`, `Cashier`, `Table` | C, A |
-| 5 Waiting and abandonment | WAITING / SEATED / ORDERED customers lose 8 (min 0). At 0: LEFT, order CANCELLED, table freed | `Customer.loseWaitingSatisfaction()`, `GameController` | A, C |
-| 6 Result | After turn 18: Victory if paid >= 4 AND revenue >= $45.00 AND average satisfaction >= 60 | `GameController.isVictory()` | C |
+| 5 Waiting and abandonment | WAITING / SEATED / ORDERED customers lose 8 (min 0). At 0: customer becomes LEFT; if they have an order, it is CANCELLED; if they are at a table, it is freed. A WAITING or SEATED customer has no order, so `getOrder()` must be null-checked first | `Customer.loseWaitingSatisfaction()`, `GameController` | A, C |
+| 6 Result | After turn 18: Victory if paid >= 4 AND revenue >= $45.00 AND average satisfaction of PAID customers >= 60 (see `getAverageSatisfaction()`) | `GameController.isVictory()` | C |
 
 Why serving is automatically correct: the Waiter acts before the Chef in every turn, so an order the Chef finishes this turn cannot be READY when the Waiter acts. No extra flag is needed.
 
@@ -138,6 +138,9 @@ Only methods another person's code calls. Money is always `int` cents.
 - `int collect(Customer customer)`: marks order and customer PAID, returns the bill in cents
 
 ### GameController (owner: C, used by D)
+Setup:
+- `GameController()`: creates the Menu, exactly 2 Tables numbered 1 and 2, one Waiter, one Chef, one Cashier. Turn counter starts at 0
+
 Turn flow:
 - `void startTurn()`: increments the turn, runs step 1
 - `ActionResult waiterSeat(Customer customer, Table table)`
@@ -153,9 +156,10 @@ A failed action does not use up the staff task. "Wait" means the UI simply does 
 Read-only state for the display:
 - `int getTurn()`, `int getMaxTurns()`
 - `int getRevenueCents()`
-- `boolean hasPaidCustomers()`, `double getAverageSatisfaction()`: UI shows N/A when no one has paid
+- `boolean hasPaidCustomers()`
+- `double getAverageSatisfaction()`: average of the satisfaction recorded at payment, over PAID customers only. LEFT and unpaid customers are excluded. Used by both the display and `isVictory()`. UI shows N/A when `hasPaidCustomers()` is false
 - `List<Customer> getWaitingQueue()`
-- `List<Table> getTables()`
+- `List<Table> getTables()`: always 2 tables, in order (table 1, table 2)
 - `List<Customer> getActiveCustomers()`: everyone not PAID or LEFT
 - `int getServedCount()`, `int getPaidCount()`, `int getUnhappyDepartures()`
 - `Menu getMenu()`
@@ -171,7 +175,7 @@ Read-only state for the display:
 
 ## Food-choice rule
 
-Customer `id` (1 to 6, in arrival order) orders menu item number `(id - 1) % 3`:
+Customer `id` (1 to 6, in arrival order) orders `menu.getItems().get((id - 1) % 3)`. This is a zero-based list index: 0 = Salad, 1 = Burger, 2 = Pasta.
 
 | Customer | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|---|---|---|---|---|---|
@@ -183,5 +187,6 @@ Deterministic, so every run with the same inputs gives the same game. The order 
 
 1. Display before or after arrivals? The brief lists the display before the steps, but the manager needs to see the new arrival before choosing. Proposal: run step 1, then display.
 2. "Oldest first" for the Cashier: proposal is earliest `readyToPayTurn`, ties broken by lower customer id.
-3. When a customer leaves, does an order the Chef already finished (READY) also get cancelled? Proposal: yes, any order not yet SERVED is cancelled.
-4. How the Waiter menu looks: proposal is 1 Seat, 2 Take order, 3 Serve, 0 Wait, then pick the customer/table by number.
+3. When a customer leaves, does an order the Chef already finished (READY) also get cancelled? Proposal: yes, any order not yet SERVED (IN_PREPARATION or READY) is cancelled. Customers with no order simply leave.
+4. How the Waiter menu looks: proposal is 1 Seat, 2 Take order, 3 Serve, 0 Wait, then pick the customer by id and the table by number (1 to 2).
+5. Read-only access for the UI: rely on the "getters only" rule, or add read-only interfaces such as `CustomerView`? (See Classes section.)
