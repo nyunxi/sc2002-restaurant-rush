@@ -10,6 +10,9 @@ public class InputReader {
     }
 
     public int readInt(String prompt, int min, int max) {
+        if (min > max) {
+            throw new IllegalArgumentException("min (" + min + ") cannot be greater than max.");
+        }
         while (true) {
             System.out.print(prompt);
             if (!scanner.hasNextLine()) {
