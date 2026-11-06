@@ -1,3 +1,5 @@
+package restaurantrush;
+
 public class ActionResult {
     // Needed to explain failed actions
     // Exceptions not to be used since this is a game (except for invalid order exception)

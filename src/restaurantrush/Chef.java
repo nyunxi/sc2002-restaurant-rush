@@ -15,10 +15,11 @@ public class Chef {
         } else {
             try {
                 o.advanceOneUnit();
-            } catch (IllegalOrderStateException) {
+            } catch (IllegalOrderStateException e) {
                 return ActionResult.fail(e.getMessage());
             }
             hasActed = true;
         }
         return ActionResult.ok();
     }
+}

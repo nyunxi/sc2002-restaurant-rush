@@ -17,7 +17,7 @@ public class Waiter {
         }
         ActionResult result = t.seat(c);
         if (result.isSuccess()) {
-            c.setState(customerState.SEATED);
+            c.setState(CustomerState.SEATED);
             this.hasActed = true;
         }
         return result;
@@ -32,7 +32,6 @@ public class Waiter {
             return ActionResult.fail("Customer has not been seated.");
         } else {
             MenuItem item = c.chooseItem(menu);
-            new Order(c, item);
             orders.add(new Order(c, item));
             c.setState(CustomerState.ORDERED);
             this.hasActed = true;

@@ -40,7 +40,7 @@ public class GameController {
 
     // Steps 2, 3: Manager choices (UI calls the methods below and re-prompts on failure)
     public ActionResult waiterSeat(Customer c, Table t) { // Waiter seats customer
-        if (!queue.contains(c)) {return ActionResult.fail("That customer is not in the waiting queue.")}
+        if (!queue.contains(c)) {return ActionResult.fail("That customer is not in the waiting queue.");}
         ActionResult r = waiter.seat(c,t);
         if (r.isSuccess()) {
             queue.remove(c);
@@ -69,8 +69,8 @@ public class GameController {
     public ActionResult chefPrepare(Order o) { // Chef prepares order
         if (!waiterDone) {
             return ActionResult.fail("The waiter must act (or wait) before the chef.");
-            return chef.prepare(o);
         }
+        return chef.prepare(o);
     }
 
     // Steps 4, 5, 6: Customers eat and pay cashiers, wait/are abandoned, and results are given
@@ -103,7 +103,7 @@ public class GameController {
             CustomerState s = c.getState(); // Order served, eating and ready-to-pay customers lose nothing 
             if (s == CustomerState.WAITING || s == CustomerState.SEATED || s == CustomerState.ORDERED) {
                 c.loseWaitingSatisfaction();
-                if (c.hasLeft()) {leave(c)};
+                if (c.hasLeft()) {leave(c);}
             }
         }
     }
@@ -139,7 +139,7 @@ public class GameController {
     public Table[] getTables(){return tables;}
     public List<Order> getOrders() {return Collections.unmodifiableList(orders);}
     public MenuItem[] getMenu() {return menu;}
-    public int getRevenueCents() {return cashier.getRevenueCents()};
+    public int getRevenueCents() {return cashier.getRevenueCents();}
     public int getPaidCount() {return cashier.getPaidCount();}
     public double getAverageSatisfaction(){return cashier.getAverageSatisfaction();}
     public int getUnhappyDepartures(){return unhappyDepartures;}

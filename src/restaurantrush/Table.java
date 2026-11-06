@@ -1,3 +1,5 @@
+package restaurantrush;
+
 public class Table {
     private final int tableId;
     private Customer customer; // Not assigned final because table gets and then loses customers
