@@ -14,7 +14,7 @@ public class Table {
 
     public ActionResult seat(Customer c) {
         if (this.customer != null) {
-            return ActionResult.fail("Table " + tableId + "Seat is occupied.");
+            return ActionResult.fail("Table " + tableId + " is occupied.");
         } else {
             this.customer = c;
             return ActionResult.ok();

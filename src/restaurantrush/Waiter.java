@@ -15,9 +15,12 @@ public class Waiter {
         if (this.hasActed == true) {
             return ActionResult.fail("Waiter is busy.");
         }
+        if (c.getState() != CustomerState.WAITING) {
+            return ActionResult.fail("Customer is not waiting to be seated.");
+        }
         ActionResult result = t.seat(c);
         if (result.isSuccess()) {
-            c.setState(CustomerState.SEATED);
+            c.seat();
             this.hasActed = true;
         }
         return result;
@@ -32,8 +35,9 @@ public class Waiter {
             return ActionResult.fail("Customer has not been seated.");
         } else {
             MenuItem item = c.chooseItem(menu);
-            orders.add(new Order(c, item));
-            c.setState(CustomerState.ORDERED);
+            Order order = new Order(c, item);
+            orders.add(order);
+            c.placeOrder(order);
             this.hasActed = true;
             return ActionResult.ok();
         }
@@ -51,7 +55,7 @@ public class Waiter {
         } catch (IllegalOrderStateException e){
             return ActionResult.fail(e.getMessage());
         }
-        o.getCustomer().setState(CustomerState.EATING);
+        o.getCustomer().markServed();
         this.hasActed = true;
         return ActionResult.ok();
     }

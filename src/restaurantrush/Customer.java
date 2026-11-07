@@ -1,9 +1,10 @@
 package restaurantrush;
 
 public class Customer {
-    private int customerId;
+    private final int customerId;
     private int satisfaction;
     private CustomerState state;
+    private Order order; // null until the Waiter takes the order
 
     public Customer(int customerId) {
         this.customerId = customerId;
@@ -12,40 +13,82 @@ public class Customer {
     }
 
     public int getCustomerId() {
-		return customerId;
-	}
+        return customerId;
+    }
 
-	public int getSatisfaction() {
-		return satisfaction;
-	}
+    public int getSatisfaction() {
+        return satisfaction;
+    }
 
     public CustomerState getState() {
-		return state;
-	}
+        return state;
+    }
 
-	public void loseWaitingSatisfaction() {
-		satisfaction -= 8;
+    public Order getOrder() {
+        return order;
+    }
 
-		if (satisfaction < 0) {
-			satisfaction = 0;
-		}
-	}
+    public MenuItem chooseItem(MenuItem[] menu) {
+        return menu[(customerId - 1) % menu.length];
+    }
 
-    public Boolean hasLeft() {
-		return satisfaction == 0;
-	}
+    // ---------- State changes ----------
+    // Each method allows only one move, so no class can skip a step (e.g. WAITING straight to PAID).
+    // Staff check the state before calling these, so an exception here means a bug, not a bad choice.
 
-	public MenuItem chooseItem(MenuItem[] menu) {
-		return menu[customerId % menu.length];
-	}
+    public void seat() {
+        requireState(CustomerState.WAITING, "be seated");
+        state = CustomerState.SEATED;
+    }
 
-	public void setState(CustomerState state) {
-		this.state = state;
-	}
+    public void placeOrder(Order order) {
+        requireState(CustomerState.SEATED, "order");
+        if (order == null || order.getCustomer() != this) {
+            throw new IllegalArgumentException("Customer " + customerId + " can only place their own order.");
+        }
+        this.order = order;
+        state = CustomerState.ORDERED;
+    }
 
-	public void finishEating() {
-		state = CustomerState.READY_TO_PAY;
-	}
+    public void markServed() {
+        requireState(CustomerState.ORDERED, "be served");
+        state = CustomerState.EATING;
+    }
 
+    public void finishEating() {
+        requireState(CustomerState.EATING, "finish eating");
+        state = CustomerState.READY_TO_PAY;
+    }
 
+    public void markPaid() {
+        requireState(CustomerState.READY_TO_PAY, "pay");
+        state = CustomerState.PAID;
+    }
+
+    public void leave() {
+        if (state == CustomerState.PAID || state == CustomerState.LEFT) {
+            throw new IllegalStateException("Customer " + customerId + " cannot leave: already " + state + ".");
+        }
+        state = CustomerState.LEFT;
+    }
+
+    // ---------- Waiting ----------
+
+    public void loseWaitingSatisfaction() {
+        satisfaction -= 8;
+        if (satisfaction < 0) {
+            satisfaction = 0;
+        }
+    }
+
+    public boolean hasLeft() {
+        return satisfaction == 0;
+    }
+
+    private void requireState(CustomerState required, String action) {
+        if (state != required) {
+            throw new IllegalStateException("Customer " + customerId + " cannot " + action
+                    + ": is " + state + ", must be " + required + ".");
+        }
+    }
 }

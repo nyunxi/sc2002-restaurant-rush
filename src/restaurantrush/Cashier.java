@@ -23,7 +23,7 @@ public class Cashier {
         } catch (IllegalOrderStateException e) {
             return ActionResult.fail(e.getMessage());
         }
-        c.setState(CustomerState.PAID); // Update state if successful
+        c.markPaid(); // Update state if successful
         t.free();
         revenueCents += o.getBillCents();
         satisfactionTotal += c.getSatisfaction(); // Update satisfaction total for average calculation (recorded at moment of payment)
