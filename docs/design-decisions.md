@@ -20,8 +20,8 @@ All classes are in package `restaurantrush` (folder `src/restaurantrush/`).
 |---|---|---|---|
 | `Main` | Boundary (entry point) | Creates the Scanner, InputReader, Menu, GameController and ConsoleUI, starts the game, and stops cleanly if the player quits or input ends | D |
 | `ConsoleUI` | Boundary | Displays state and results, reads the manager's choices, shows failure reasons. Contains no game rules | D |
-| `InputReader` | Boundary | Reads a number in a range, re-prompts on invalid input, throws `GameQuitException` on `q` | D |
-| `GameQuitException` | Boundary (exception) | Signals that the player chose to quit. Caught in `Main`; the game stops with no result | D |
+| `InputReader` | Boundary | Reads a number in a range, re-prompts on invalid input, throws `GameQuitException` on `q` or when input ends | D |
+| `GameQuitException` | Boundary (exception) | Signals that the player quit or input ran out. Caught in `Main`; the game stops with no result. Its own type, so `Main` never hides an `IllegalStateException` caused by a real bug | D |
 | `GameController` | Control | Runs the turn steps in order. Owns the queue, tables, customers, orders, staff and turn counter. Decides victory or defeat | C |
 | `Waiter` | Entity (staff) | Seats a customer, takes an order, serves a READY order. One task per turn | C |
 | `Chef` | Entity (staff) | Advances one order by one preparation unit. One unit per turn | C |
@@ -196,7 +196,7 @@ Read-only state for the display:
 
 ### InputReader (owner: D)
 - `InputReader(Scanner scanner)`
-- `int readInt(String prompt, int min, int max)`: throws `GameQuitException` if the player types `q`, and `IllegalStateException` if input ends
+- `int readInt(String prompt, int min, int max)`: throws `GameQuitException` if the player types `q` or input ends
 
 ## Food-choice rule
 

@@ -14,12 +14,10 @@ public class Main {
         try {
             new ConsoleUI(game, input).run();
         } catch (GameQuitException e) {
+            // Only the player quitting or input running out. Any other exception is a bug and is not caught here.
             System.out.println();
-            System.out.println("Game stopped at turn " + game.getTurn() + ". No result for an unfinished game.");
-        } catch (IllegalStateException e) {
-            // InputReader throws this when input ends (Ctrl+D, or a test file that is too short)
-            System.out.println();
-            System.out.println("Input ended at turn " + game.getTurn() + ". Game stopped.");
+            System.out.println("Game stopped at turn " + game.getTurn() + " (" + e.getMessage()
+                    + "). No result for an unfinished game.");
         }
     }
 }

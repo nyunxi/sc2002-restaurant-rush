@@ -16,11 +16,11 @@ public class InputReader {
         while (true) {
             System.out.print(prompt);
             if (!scanner.hasNextLine()) {
-                throw new IllegalStateException("Input ended before the game finished.");
+                throw new GameQuitException("input ended");
             }
             String line = scanner.nextLine().trim();
             if (line.equalsIgnoreCase("q")) {
-                throw new GameQuitException();
+                throw new GameQuitException("you quit");
             }
             try {
                 int value = Integer.parseInt(line);
