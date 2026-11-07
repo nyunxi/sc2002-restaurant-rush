@@ -94,7 +94,7 @@ public class GameController {
         for (Order o : orders) {
             Customer c = o.getCustomer();
             Integer served = servedOnTurn.get(o);
-            if (c.getState() == CustomerState.EATING && served != null && served < turn) {c.finishEating()};
+            if (c.getState() == CustomerState.EATING && served != null && served < turn) {c.finishEating();}
         }
     }
 
@@ -115,7 +115,7 @@ public class GameController {
         }
         Table t = tableOf(c);
         if (t != null) {t.free();}
-        c.setState(CustomerState.LEFT);
+        c.leave();
         unhappyDepartures++;
     }
 
@@ -136,7 +136,7 @@ public class GameController {
     // Read-only states for user interface (UI)
     public int getTurn(){return turn;}
     public List<Customer> getQueue() {return Collections.unmodifiableList(queue);}
-    public Table[] getTables(){return tables;}
+    public List<Table> getTables(){return Collections.unmodifiableList(Arrays.asList(tables));}
     public List<Order> getOrders() {return Collections.unmodifiableList(orders);}
     public MenuItem[] getMenu() {return menu;}
     public int getRevenueCents() {return cashier.getRevenueCents();}
