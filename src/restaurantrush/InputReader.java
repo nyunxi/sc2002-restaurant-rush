@@ -19,6 +19,9 @@ public class InputReader {
                 throw new IllegalStateException("Input ended before the game finished.");
             }
             String line = scanner.nextLine().trim();
+            if (line.equalsIgnoreCase("q")) {
+                throw new GameQuitException();
+            }
             try {
                 int value = Integer.parseInt(line);
                 if (value >= min && value <= max) {

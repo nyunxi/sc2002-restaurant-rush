@@ -18,9 +18,10 @@ All classes are in package `restaurantrush` (folder `src/restaurantrush/`).
 
 | Class | Type | Responsibility | Owner |
 |---|---|---|---|
-| `Main` | Boundary (entry point) | Creates the Scanner, InputReader, Menu, GameController and ConsoleUI, starts the game | D |
+| `Main` | Boundary (entry point) | Creates the Scanner, InputReader, Menu, GameController and ConsoleUI, starts the game, and stops cleanly if the player quits or input ends | D |
 | `ConsoleUI` | Boundary | Displays state and results, reads the manager's choices, shows failure reasons. Contains no game rules | D |
-| `InputReader` | Boundary | Reads a number in a range, re-prompts on invalid input | D |
+| `InputReader` | Boundary | Reads a number in a range, re-prompts on invalid input, throws `GameQuitException` on `q` | D |
+| `GameQuitException` | Boundary (exception) | Signals that the player chose to quit. Caught in `Main`; the game stops with no result | D |
 | `GameController` | Control | Runs the turn steps in order. Owns the queue, tables, customers, orders, staff and turn counter. Decides victory or defeat | C |
 | `Waiter` | Entity (staff) | Seats a customer, takes an order, serves a READY order. One task per turn | C |
 | `Chef` | Entity (staff) | Advances one order by one preparation unit. One unit per turn | C |
@@ -38,7 +39,7 @@ Design choices to note (useful later for the design discussion):
 - Staff are entities that perform actions; GameController decides when they act. Alternative considered: putting all action logic in GameController (rejected: one huge class, low cohesion).
 - Waiter, Chef and Cashier do not share a superclass in Stage 1. Their actions have nothing in common yet, and the brief says not to create abstractions just to satisfy a checklist.
 - Failed actions are reported with `ActionResult`, not exceptions, because a failed action is a normal part of play. `Order` does throw `IllegalOrderStateException`; staff classes catch it and turn it into an `ActionResult.fail(...)`, so it never reaches the UI.
-- Customer state can only change through one method per move (`seat()`, `placeOrder()`, `markServed()`, `finishEating()`, `markPaid()`, `leave()`). Each checks the current state first, so no class can skip a step such as WAITING straight to PAID. There is no public `setState()`. This also lets Stage 2 customer subclasses override a single move. Alternative considered: one public `setState()` (rejected: any class could put a customer in any state, so Customer could not protect its own data).
+- Customer state can only change through one method per move (`seat()`, `placeOrder()`, `markServed()`, `finishEating()`, `markPaid()`, `leave()`). Each checks the current state first, so no class can skip a step such as WAITING straight to PAID. There is no public `setState()`. This also lets any future customer type override a single move. Alternative considered: one public `setState()` (rejected: any class could put a customer in any state, so Customer could not protect its own data).
 - The Customer holds a reference to its own Order (`getOrder()`). GameController also keeps the list of all orders, oldest first, for the Cashier and for display.
 - `getQueue()`, `getTables()` and `getOrders()` return unmodifiable lists, so the UI cannot add, remove or replace customers, tables or orders. This does not stop the UI calling mutating methods on the objects inside (e.g. `customer.markPaid()`). Stage 1 rule: ConsoleUI only calls getters on objects it receives.
 
@@ -195,7 +196,7 @@ Read-only state for the display:
 
 ### InputReader (owner: D)
 - `InputReader(Scanner scanner)`
-- `int readInt(String prompt, int min, int max)`: throws `IllegalStateException` if input ends
+- `int readInt(String prompt, int min, int max)`: throws `GameQuitException` if the player types `q`, and `IllegalStateException` if input ends
 
 ## Food-choice rule
 
