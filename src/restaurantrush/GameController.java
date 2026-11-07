@@ -20,7 +20,15 @@ public class GameController {
     private int unhappyDepartures = 0;
     private boolean waiterDone  =false; // Waiter must act/wait before the chef
 
-    public GameController(MenuItem[] menu) {this.menu = menu;}
+    public GameController(MenuItem[] menu) {
+        if (menu == null || menu.length == 0) {
+            throw new IllegalArgumentException("The menu must have at least one item.");
+        }
+        for (MenuItem item : menu) {
+            if (item == null) {throw new IllegalArgumentException("The menu cannot contain an empty entry.");}
+        }
+        this.menu = menu.clone(); // Defensive copy: later changes to the caller's array do not affect the game
+    }
 
     // Step 1: Arrivals
     public void startTurn() {
@@ -41,6 +49,7 @@ public class GameController {
     // Steps 2, 3: Manager choices (UI calls the methods below and re-prompts on failure)
     public ActionResult waiterSeat(Customer c, Table t) { // Waiter seats customer
         if (!queue.contains(c)) {return ActionResult.fail("That customer is not in the waiting queue.");}
+        if (!Arrays.asList(tables).contains(t)) {return ActionResult.fail("That table is not in this restaurant.");}
         ActionResult r = waiter.seat(c,t);
         if (r.isSuccess()) {
             queue.remove(c);
@@ -50,12 +59,14 @@ public class GameController {
     }
 
     public ActionResult waiterTakeOrder(Customer c) { // Waiter takes customer's order
+        if (!customers.contains(c)) {return ActionResult.fail("That customer is not in this restaurant.");}
         ActionResult r = waiter.takeOrder(c, menu, orders);
         if (r.isSuccess()) {waiterDone = true;}
         return r;
     }
 
     public ActionResult waiterServe(Order o) { // Waiter serves order to correct customer
+        if (!orders.contains(o)) {return ActionResult.fail("That order was not taken in this restaurant.");}
         ActionResult r = waiter.serve(o);
         if (r.isSuccess()) {
             servedOnTurn.put(o, turn); // Required to ensure that customer eats for a full turn before paying
@@ -67,6 +78,7 @@ public class GameController {
     public void waiterWait() {waiterDone = true;} //?
 
     public ActionResult chefPrepare(Order o) { // Chef prepares order
+        if (!orders.contains(o)) {return ActionResult.fail("That order was not taken in this restaurant.");}
         if (!waiterDone) {
             return ActionResult.fail("The waiter must act (or wait) before the chef.");
         }
@@ -138,7 +150,7 @@ public class GameController {
     public List<Customer> getQueue() {return Collections.unmodifiableList(queue);}
     public List<Table> getTables(){return Collections.unmodifiableList(Arrays.asList(tables));}
     public List<Order> getOrders() {return Collections.unmodifiableList(orders);}
-    public MenuItem[] getMenu() {return menu;}
+    public MenuItem[] getMenu() {return menu.clone();} // Copy, so callers cannot change the game's menu
     public int getRevenueCents() {return cashier.getRevenueCents();}
     public int getPaidCount() {return cashier.getPaidCount();}
     public double getAverageSatisfaction(){return cashier.getAverageSatisfaction();}
