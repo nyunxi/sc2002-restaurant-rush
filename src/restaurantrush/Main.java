@@ -11,6 +11,13 @@ public class Main {
         MenuItem[] menu = new Menu().getItems().toArray(new MenuItem[0]);
         GameController game = new GameController(menu);
 
-        new ConsoleUI(game, input).run();
+        try {
+            new ConsoleUI(game, input).run();
+        } catch (GameQuitException e) {
+            // Only the player quitting or input running out. Any other exception is a bug and is not caught here.
+            System.out.println();
+            System.out.println("Game stopped at turn " + game.getTurn() + " (" + e.getMessage()
+                    + "). No result for an unfinished game.");
+        }
     }
 }

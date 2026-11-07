@@ -63,7 +63,7 @@ public class ConsoleUI {
     private void askWaiter() {
         while (true) {
             System.out.println();
-            System.out.println("Waiter: 1 Seat a customer | 2 Take an order | 3 Serve a ready order | 0 Wait");
+            System.out.println("Waiter: 1 Seat a customer | 2 Take an order | 3 Serve a ready order | 0 Wait | q Quit");
             int task = input.readInt("Choose Waiter task: ", 0, 3);
 
             if (task == 0) {
@@ -134,7 +134,7 @@ public class ConsoleUI {
     private void askChef() {
         while (true) {
             System.out.println();
-            System.out.println("Chef: 1 Prepare an order | 0 Wait");
+            System.out.println("Chef: 1 Prepare an order | 0 Wait | q Quit");
             int task = input.readInt("Choose Chef task: ", 0, 1);
 
             if (task == 0) {
