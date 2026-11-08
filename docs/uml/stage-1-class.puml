@@ -1,22 +1,282 @@
 @startuml
 skinparam classAttributeIconSize 0
 hide empty members
+skinparam linetype ortho
 
 class Table <<entity>> {
   - tableId : int {readOnly}
+  + Table(tableId : int)
   + isFree() : boolean
   + seat(c : Customer) : ActionResult
   + free() : void
 }
 
+class Customer <<entity>> {
+  - customerId : int {readOnly}
+  - satisfaction : int
+  - state : CustomerState
+  + Customer(customerId : int)
+  + chooseItem(menu : MenuItem[]) : MenuItem
+  + seat() : void
+  + placeOrder(order : Order) : void
+  + markServed() : void
+  + finishEating() : void
+  + markPaid() : void
+  + leave() : void
+  + loseWaitingSatisfaction() : void
+  + hasLeft() : boolean
+  - requireState(required : CustomerState, action : String) : void
+}
+
+class Order <<entity>> {
+  - {static} nextOrderNumber : int 
+  - orderNumber : int {readOnly}
+  - billCents : int {readOnly}
+  - unitsDone : int
+  - status : OrderStatus
+  + Order(customer : Customer, item : MenuItem)
+  + canAdvance() : boolean
+  + advanceOneUnit() : boolean
+  + markServed() : void 
+  + markPaid() : void
+  + cancel() : void
+  + isReady() : boolean
+  + canCancel() : boolean
+  + getUnitsRemaining() : int
+  + getProgress() : String
+  + getBillDisplay() : String
+  + toString(): String
+  - requireStatus(required : OrderStatus, action : String) : void
+}
+
+class MenuItem <<entity>> {
+  - name : String {readOnly}
+  - priceCents : int {readOnly}
+  - prepUnits : int {readOnly}
+  + MenuItem(name : String, priceCents : int, prepUnits : int)
+  + getPriceDisplay() : String
+  + toString() : String
+}
+
+class Menu <<entity>> {
+  + {static} SALAD : String = "Salad" {readOnly}
+  + {static} BURGER : String = "Burger" {readOnly}
+  + {static} PASTA : String = "Pasta" {readOnly}
+  + Menu()
+  + getItems() : List<MenuItem>
+  + getItem(index : int) : MenuItem
+  + findByName(name : String) : MenuItem
+  + size() : int
+  + toString() : String
+}
+
 enum CustomerState <<enumeration>> {
   WAITING
   SEATED
+  ORDERED
+  EATING
+  READY_TO_PAY
+  PAID
+  LEFT
 }
 
-Table "0..1" --> "0..1" Customer : seated >
+enum OrderStatus <<enumeration>> {
+  IN_PREPARATION
+  READY
+  SERVED
+  PAID
+  CANCELLED
+  --
+  - label : String {readOnly}
+  + isCancellable() : boolean
+  + isClosed() : boolean
+}
+
+class GameController <<control>> {
+  + {static} TOTAL_TURNS : int = 18 {readOnly}
+  - {static} ARRIVAL_TURNS : int[] = {1, 4, 7, 10, 13, 16} {readOnly}
+  - servedOnTurn : Map<Order, Integer> {readOnly}
+  - turn : int
+  - nextCustomerId : int
+  - unhappyDepartures : int
+  - waiterDone : boolean
+  + GameController(menu : MenuItem[])
+  + startTurn() : void
+  + waiterSeat(c : Customer, t : Table) : ActionResult
+  + waiterTakeOrder(c : Customer) : ActionResult
+  + waiterServe(o : Order) : ActionResult
+  + waiterWait() : void
+  + chefPrepare(o : Order) : ActionResult
+  + endTurn() : void
+  + isGameOver() : boolean
+  + isVictory() : boolean
+  + getQueue() : List<Customer>
+  + getTables() : List<Table>
+  + getOrders() : List<Order>
+  + getMenu() : MenuItem[]
+  - payOldestReadyCustomer() : void
+  - finishEating() : void
+  - applyWaitingLoss() : void
+  - leave(c : Customer) : void
+  - tableOf(c : Customer) : Table
+}
+
+class Waiter <<entity>> {
+  - hasActed : boolean
+  + startTurn() : void
+  + seat(c : Customer, t : Table) : ActionResult
+  + takeOrder(c : Customer, menu : MenuItem[], orders : List<Order>) : ActionResult
+  + serve(o : Order) : ActionResult
+}
+
+class Chef <<entity>> {
+  - hasActed : boolean
+  + startTurn() : void
+  + prepare(o : Order) : ActionResult
+}
+
+class Cashier <<entity>> {
+  - hasActed : boolean 
+  - paidCount : int 
+  - revenueCents : int
+  - satisfactionTotal : int 
+  + startTurn() : void
+  + processPayment(o : Order, t : Table) : ActionResult
+  + getAverageSatisfaction() : double
+}
+
+class ActionResult <<entity>> {
+  - success : boolean {readOnly}
+  - reason : String {readOnly}
+  + ActionResult(success : boolean, reason : String)
+  + {static} ok() : ActionResult
+  + {static} fail(reason : String) : ActionResult
+}
+
+class ConsoleUI <<boundary>> {
+  + ConsoleUI(game : GameController, input : InputReader)
+  + run() : void
+  + {static} formatCents(cents : int) : String
+  - showTurnState() : void
+  - askWaiter() : void
+  - askChef() : void
+  - showTurnResults() : void
+  - showFinalResult() : void
+}
+
+class InputReader <<boundary>> {
+  - scanner : Scanner {readOnly}
+  + InputReader(scanner : Scanner)
+  + readInt(prompt : String, min : int, max : int) : int
+}
+
+class Main <<boundary>> {
+  + {static} main(args : String[]) : void
+}
+
+class Money <<utility>> {
+  - Money()
+  + {static} format(cents : int) : String
+}
+
+class GameQuitException <<exception>> {
+  - {static} serialVersionUID : long = 1L {readOnly}
+  + GameQuitException(reason : String)
+}
+
+class IllegalOrderStateException <<exception>> {
+  - {static} serialVersionUID : long = 1L {readOnly}
+  + IllegalOrderStateException(message : String)
+}
+
+class RuntimeException <<java.lang>>
+class IllegalStateException <<java.lang>>
+
+GameController "1" *-- "2" Table : tables
+GameController "1" *-- "1" Waiter : waiter
+GameController "1" *-- "1" Chef : chef
+GameController "1" *-- "1" Cashier : cashier
+GameController "1" *-- "0..6" Customer : customers
+Menu "1" *-- "3" MenuItem : items
+
+GameController "0..1" --> "*" Customer : queue
+GameController "1" --> "*" Order : orders
+GameController --> "1..*" MenuItem : menu
+Order "*" --> "1" MenuItem : item
+Table "0..1" --> "0..1" Customer : customer
+ConsoleUI "1" --> "1" GameController : game
+ConsoleUI "1" --> "1" InputReader : input
+
+Customer "1" -- "0..1" Order : order / customer
+
+IllegalOrderStateException --|> IllegalStateException
+IllegalStateException --|> RuntimeException
+GameQuitException --|> RuntimeException
+
+Main .[#999999].> Menu : <<create>>
+Main .[#999999].> GameController : <<create>>
+Main .[#999999].> InputReader : <<create>>
+Main .[#999999].> ConsoleUI : <<create>>
+Main .[#999999].> GameQuitException : catches
+
+Waiter .[#999999].> Order : <<create>>
+Waiter .[#999999].> Customer
+Waiter .[#999999].> Table
+Chef .[#999999].> Order
+Cashier .[#999999].> Order
+Cashier .[#999999].> Table
+Customer .[#999999].> MenuItem : chooses
+
+Waiter .[#999999].> ActionResult : <<create>>
+Chef .[#999999].> ActionResult : <<create>>
+Cashier .[#999999].> ActionResult : <<create>>
+Table .[#999999].> ActionResult : <<create>>
+GameController .[#999999].> ActionResult : <<create>>
+ConsoleUI .[#999999].> ActionResult
+
+InputReader .[#999999].> GameQuitException : <<throws>>
+Order .[#999999].> IllegalOrderStateException : <<throws>>
+
+MenuItem .[#999999].> Money
+Order .[#999999].> Money
+ConsoleUI .[#999999].> Money
 
 note right of Customer
-  Encapsulation: ...
+  <b>Encapsulation</b>
+  State changes only through seat(), placeOrder(),
+  markServed(), finishEating(), markPaid(), leave().
+  Each checks the current state first via private
+  requireState(), so no class can skip a step
+  (e.g. WAITING straight to PAID).
 end note
+
+note bottom of Order
+  <b>Encapsulation</b>
+  billCents is final: the price is locked
+  when the order is taken.
+  Status changes are guarded by requireStatus().
+end note
+
+note left of GameController
+  <b>Composition</b>
+  Creates and owns the 2 Tables, the staff
+  and every Customer for the whole game.
+  <b>Encapsulation</b>
+  getQueue(), getTables(), getOrders() return
+  unmodifiable lists; getMenu() returns a copy.
+end note
+
+note right of MenuItem
+  <b>Polymorphism</b>
+  MenuItem and Order override Object.toString().
+  Staff catch IllegalOrderStateException; Main
+  catches GameQuitException (both RuntimeException
+  subtypes).
+end note
+
+legend top left
+  Stage 1 class diagram
+  Simple getters and unused status checks omitted.
+  ConsoleUI picking and formatting helpers omitted.
+endlegend
 @enduml
