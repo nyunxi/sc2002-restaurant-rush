@@ -41,7 +41,15 @@ If a choice is not allowed, the game explains why and asks again without using u
 | Burger | $15.00 | 1 |
 | Pasta | $18.00 | 2 |
 
-Customers choose their own food: customer 1 orders Salad, 2 Burger, 3 Pasta, then the cycle repeats.
+Six customers arrive, one on each arrival turn. Customer 2 is a **VIP** and customer 4 is a **CRITIC**, the rest are regular customers.
+| Customer type | Satisfaction lost per waiting turn | Bill | Food Choice |
+| --- | --- | --- | --- |
+| Regular | 8 | Full menu price | By customer number: 1 Salad, 2 Burger, 3 Pasta, then cycle repeats |
+| VIP | 5 | 10% of menu price | Same rules as Regular |
+| CRITIC | 12 | Full menu price | Always orders the most expensive dish (Pasta) |
+
+so customer 2 (VIP) orders a Burger for $13.50, and customer 4 (CRITIC) orders a Pasta instead of the Salad the cycle would give.
+
 
 **To quit early,** type `q` at any prompt (or press Ctrl+D). The game stops without a result.
 
