@@ -21,7 +21,7 @@ public class Order {
         this.orderNumber = nextOrderNumber++;
         this.customer = customer;
         this.item = item;
-        this.billCents = item.getPriceCents();
+        this.billCents = Money.applyDiscountRate(item.getPriceCents(), customer.getDiscountRate());
         this.unitsDone = 0;
         this.status = OrderStatus.IN_PREPARATION;
     }
@@ -84,7 +84,11 @@ public class Order {
     public String getBillDisplay() {
         return Money.format(billCents);
     }
-
+    
+    public int getSavingsCents() {
+        return item.getPriceCents() - billCents;
+    }
+    
     public OrderStatus getStatus() {
         return status;
     }
@@ -115,7 +119,11 @@ public class Order {
     
     @Override
     public String toString() {
-        String text = describe() + ", " + getBillDisplay() + ", " + status.getLabel();
+        String text = describe() + ", " + getBillDisplay();
+        if (getSavingsCents() > 0) {
+            text += " (menu " + item.getPriceDisplay() + ")";
+        }
+        text += ", " + status.getLabel();
         if (status == OrderStatus.IN_PREPARATION) {
             text += " (" + getProgress() + ")";
         }
