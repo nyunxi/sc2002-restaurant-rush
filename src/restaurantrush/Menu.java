@@ -18,9 +18,14 @@ public class Menu {
      * Salad $9.00 / 1 unit, Burger $15.00 / 1 unit, Pasta $18.00 / 2 units.
      */
     public Menu() {
-        items.add(new MenuItem(SALAD, 900, 1));
-        items.add(new MenuItem(BURGER, 1500, 1));
-        items.add(new MenuItem(PASTA, 1800, 2));
+        MenuItem salad = new MenuItem(SALAD, 900, 1);
+        MenuItem burger = new MenuItem(BURGER, 1500, 1);
+        MenuItem pasta = new MenuItem(PASTA, 1800, 2);
+        items.add(salad);
+        items.add(burger);
+        items.add(pasta);
+        items.add(new ComboMeal(salad, pasta));
+        items.add(new ComboMeal(salad, burger));
     }
 
     public List<MenuItem> getItems() {
