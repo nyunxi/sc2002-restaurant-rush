@@ -159,6 +159,7 @@ public class GameController {
     // Read-only states for user interface (UI)
     public int getTurn(){return turn;}
     public List<Customer> getQueue() {return Collections.unmodifiableList(queue);}
+    public List<Customer> getCustomers() {return Collections.unmodifiableList(customers);}
     public List<Table> getTables(){return Collections.unmodifiableList(Arrays.asList(tables));}
     public List<Order> getOrders() {return Collections.unmodifiableList(orders);}
     public MenuItem[] getMenu() {return menu.clone();} // Copy, so callers cannot change the game's menu

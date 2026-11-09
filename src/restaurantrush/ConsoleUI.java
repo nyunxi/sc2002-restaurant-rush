@@ -238,6 +238,10 @@ public class ConsoleUI {
         System.out.println("Paid customers: " + game.getPaidCount() + " (need 4)");
         System.out.println("Revenue: " + formatCents(game.getRevenueCents()) + " (need $45.00)");
         System.out.println("Average satisfaction (paid): " + formatAverage() + " (need 60)");
+        System.out.println("Customers:");
+        for (Customer c : game.getCustomers()) {
+            System.out.println("  " + describeCustomer(c));
+        }
     }
 
     // ---------- Formatting helpers ----------
