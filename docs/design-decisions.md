@@ -28,7 +28,7 @@ All classes are in package `restaurantrush` (folder `src/restaurantrush/`).
 | `Cashier` | Entity (staff) | Collects payment from one READY_TO_PAY customer per turn. Keeps revenue, paid count and the satisfaction total used for the average | C |
 | `Table` | Entity | Knows whether it is free and who sits there | C |
 | `ActionResult` | Entity (value) | Success or failure of a staff action, with a reason | C |
-| `Customer` | Entity | Holds id, satisfaction and state. Loses satisfaction while waiting. Chooses its own food. Has three overridable methods with regular behaviour as the default | A |
+| `Customer` | Entity | Holds id, satisfaction and state. Loses satisfaction while waiting. Chooses its own food. Has four overridable methods with regular behaviour as the default | A |
 | `VIPCustomer` | Entity | A customer who loses 5 satisfaction per waiting turn and gets 10% off the bill. Overrides `getWaitingLoss()`, `getDiscountRate()`, `getCustomerType()` | A |
 | `CriticCustomer` | Entity | A customer who loses 12 satisfaction per waiting turn and always orders the most expensive dish. Overrides `getWaitingLoss()`, `chooseItem()`, `getCustomerType()` | A |
 | `MenuItem` | Entity | Name, price in cents, preparation units. Immutable | B |
