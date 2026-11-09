@@ -244,6 +244,7 @@ public class ConsoleUI {
 
     private String describeCustomer(Customer c) {
         String text = "Customer " + c.getCustomerId()
+                + " (" + c.getCustomerType() + ")"
                 + " | satisfaction " + c.getSatisfaction()
                 + " | " + c.getState();
         Order order = c.getOrder();
