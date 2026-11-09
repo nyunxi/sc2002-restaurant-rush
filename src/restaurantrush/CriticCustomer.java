@@ -6,14 +6,17 @@ public class CriticCustomer extends Customer {
         super(customerID);
     }
 
+    @Override 
     public int getWaitingLoss() {
         return 12;
     }
 
+    @Override 
     public String getCustomerType() {
         return "Critic";
     }
 
+    @Override
     public MenuItem chooseItem(MenuItem[] menu) {
         if (menu == null || menu.length == 0) {
             throw new IllegalArgumentException("Menu cannot be empty.");
