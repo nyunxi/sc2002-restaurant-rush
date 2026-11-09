@@ -24,4 +24,5 @@ public final class Money {
 
     public static int applyDiscountRate(int cents, double rate) {
         return percentOff(cents, (int) Math.round(rate * 100));
+    }
 }
