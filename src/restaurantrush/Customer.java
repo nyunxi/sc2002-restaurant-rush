@@ -20,6 +20,18 @@ public class Customer {
         return satisfaction;
     }
 
+	public double getDiscountRate() {
+		return 0.0;
+	}
+
+	public String getCustomerType() {
+		return "Regular";
+	}
+
+	public int getWaitingLoss() {
+		return 8;
+	}
+
     public CustomerState getState() {
         return state;
     }
@@ -75,7 +87,7 @@ public class Customer {
     // ---------- Waiting ----------
 
     public void loseWaitingSatisfaction() {
-        satisfaction -= 8;
+        satisfaction -= getWaitingLoss();
         if (satisfaction < 0) {
             satisfaction = 0;
         }
