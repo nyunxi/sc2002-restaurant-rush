@@ -5,6 +5,8 @@ import java.util.*;
 public class GameController {
     public static final int TOTAL_TURNS = 18; // Set constant for total number of turns allowed per round
     private static final int[] ARRIVAL_TURNS = {1, 4, 7, 10, 13, 16}; // Turns on which customers will arrive
+    private static final int VIP_CUSTOMER_ID = 2; // Stage 2: Second arrival is the VIP customer
+    private static final int CRITIC_CUSTOMER_ID = 4; // Stage 2: Fourth arrival is the Critic customer
 
     private final MenuItem[] menu;
     private final List<Customer> queue = new LinkedList<>(); // Waiting customers (FIFO)
@@ -35,7 +37,7 @@ public class GameController {
         turn++;
         for (int t : ARRIVAL_TURNS) {
             if (t == turn) {
-                Customer c = new Customer(nextCustomerId++);
+                Customer c = createCustomer(nextCustomerId++); //new change for Stage 2
                 queue.add(c);
                 customers.add(c);
             }
@@ -44,6 +46,15 @@ public class GameController {
         chef.startTurn();
         cashier.startTurn();
         waiterDone = false;
+    }
+
+    //Stage 2: Name the customer subclasses 
+    private Customer createCustomer(int id){
+        if (id == VIP_CUSTOMER_ID) {
+            return new VIPCustomer(id);}
+        if (id == CRITIC_CUSTOMER_ID) {
+            return new CriticCustomer(id);}
+        return new Customer(id); //everyone who is not a VIP or Critic is a regular customer
     }
 
     // Steps 2, 3: Manager choices (UI calls the methods below and re-prompts on failure)
@@ -75,7 +86,7 @@ public class GameController {
         return r;
     }
 
-    public void waiterWait() {waiterDone = true;} //?
+    public void waiterWait() {waiterDone = true;} // Waiter does nothing this turn
 
     public ActionResult chefPrepare(Order o) { // Chef prepares order
         if (!orders.contains(o)) {return ActionResult.fail("That order was not taken in this restaurant.");}
