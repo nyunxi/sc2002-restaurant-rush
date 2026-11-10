@@ -13,9 +13,14 @@ public class Menu {
     private final List<MenuItem> items = new ArrayList<MenuItem>();
  
     public Menu() {
-        items.add(new MenuItem(SALAD, 900, 1));
-        items.add(new MenuItem(BURGER, 1500, 1));
-        items.add(new MenuItem(PASTA, 1800, 2));
+        MenuItem salad = new MenuItem(SALAD, 900, 1);
+        MenuItem burger = new MenuItem(BURGER, 1500, 1);
+        MenuItem pasta = new MenuItem(PASTA, 1800, 2);
+        items.add(salad);
+        items.add(burger);
+        items.add(pasta);
+        items.add(new ComboMeal(salad, pasta));
+        items.add(new ComboMeal(salad, burger));
     }
  
     public List<MenuItem> getItems() {
