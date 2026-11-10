@@ -21,7 +21,7 @@ Food choice is deterministic Regulars and VIPs order by arrival position (1 Sala
 ## Stage 2 rules checked
 | Rule | Source | Where it shows |
 |---|---|---|
-| Satisfaction lost per waiting turn: Regular 8, VIP 5, Critic 12 | Brief 4.2 table; 3.2 step 5 | `defeat.txt` final list: VIP at 25, Regular customer 5 at 52; Critic drops from 64 to 52 between turns 13 and 14 |
+| Satisfaction lost per waiting turn: Regular 8, VIP 5, Critic 12 | Brief 4.2 table; 3.2 step 5 | `defeat.txt`: final list shows VIP at 25, Regular customer 5 at 52; the Critic drops from 64 to 52 at the end of turn 13 (step 5) |
 | VIP pays 10% off | Brief 4.2 table | `victory.txt`: Order #2 Burger shows `$13.50 (menu $15.00)` |
 | Discounted price stored as integer cents | Brief 2.2 (Money) | 1500 cents x 0.9 = 1350 cents, displayed as $13.50 |
 | Bill fixed when the order is taken | Design decision (from Stage 1) | `victory.txt`: Order #2 stays $13.50 from ordering through payment |
