@@ -26,18 +26,18 @@ public class ComboMeal extends MenuItem {
 
   @Override
   public String toString() {
-    return super.toString() + " - " + (100 - PRICE_PERCENT) + "% off"
+    return super.toString() + " - " + (100 - PRICE_PERCENT) + "% off "
       + Money.format(getSeparatePriceCents());
   }
 
   private static String comboName(MenuItem first, MenuItem second) {
     if (first == null || second == null) {
-      throw new IllegalARgumentException("A combo needs two menu items.");
+      throw new IllegalArgumentException("A combo needs two menu items.");
     }
     return first.getName() + " + " + second.getName() + " Combo";
   }
 
   private static int comboPriceCents(MenuItem first, MenuItem second) {
-    return Money.percentOff(first.getPriceCents() + second.getPriceCents(), 100 - PRICE_PERCENT)
+    return Money.percentOff(first.getPriceCents() + second.getPriceCents(), 100 - PRICE_PERCENT);
   }
 }
