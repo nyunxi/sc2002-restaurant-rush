@@ -103,4 +103,15 @@ public class Customer {
                     + ": is " + state + ", must be " + required + ".");
         }
     }
+
+    public void recoverHappyHourSatisfaction() {
+        if (satisfaction <= 0) {
+            return;
+        }
+
+        if (state == CustomerState.WAITING || state == CustomerState.SEATED || state == CustomerState.ORDERED) {
+            satisfaction = Math.min(100, satisfaction + HappyHour.SATISFACTION_RECOVERY);
+        }
+    }
+
 }
