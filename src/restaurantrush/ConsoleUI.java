@@ -204,7 +204,7 @@ public class ConsoleUI {
 
     private String happyHourStatus(){
         if (game.isHappyHourActive()){
-            return "Happy Hour: ACTIVE, " + game.getHappyHourTurnsRemaining() + " turns(s) left including this one";
+            return "Happy Hour: ACTIVE, " + game.getHappyHourTurnsRemaining() + " turn(s) left including this one";
         }
         return game.isHappyHourUsed() ? "Happy Hour: used" : "Happy Hour: available (once per game)";
     }
