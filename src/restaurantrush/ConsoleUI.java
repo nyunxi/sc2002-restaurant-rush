@@ -18,6 +18,7 @@ public class ConsoleUI {
 
     public void run() {
         System.out.println("=== Restaurant Rush ===");
+        showMenu();
         while (!game.isGameOver()) {
             game.startTurn();
             showTurnState();
@@ -30,6 +31,13 @@ public class ConsoleUI {
     }
 
     // ---------- Start-of-turn display ----------
+
+    private void showMenu(){
+        System.out.println("Menu:");
+        for (MenuItem item: game.getMenu()){
+            System.out.println(" " + item);
+        }
+    }
 
     private void showTurnState() {
         System.out.println();
