@@ -105,7 +105,7 @@ Compare: https://github.com/nyunxi/sc2002-restaurant-rush/compare/stage-2...stag
 - `HappyHour.java`: the once-per-game pricing policy and its countdown
 - `docs/test-notes-stage3.md`: Stage 3 results and the brief rules they check
 - `docs/uml/stage-3-class.*`: Stage 3 class diagram
-- `docs/uml/stage-3-sequence.puml`: Stage 3 sequence diagram (the VIP's order, with and without Happy Hour)
+- `docs/uml/stage-3-sequence.*`: Stage 3 sequence diagram (the VIP's order, with and without Happy Hour)
 
 **Changed files**
 
@@ -139,4 +139,4 @@ Design: [`docs/design-decisions.md`](docs/design-decisions.md) covers class resp
 | Paige | Customers |
 | Enoch | Menu and pricing |
 | Rajvi | Turn engine and staff |
-| Yunxi | CLI, input handling, testing and releases |
+| Yunxi | CCLI, input handling, testing and releases; Stage 3 Host and Happy Hour wiring; Stage 3 class and sequence diagrams |
