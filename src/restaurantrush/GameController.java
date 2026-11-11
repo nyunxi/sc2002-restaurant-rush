@@ -22,7 +22,7 @@ public class GameController {
     private int unhappyDepartures = 0;
     private boolean waiterDone  =false; // Waiter must act/wait before the chef
     private final HappyHour happyHour = new HappyHour(); //Stage 3: Introduction of HappyHour
-
+    private boolean turnInProgress = false; //true between startTurn() and endTurn()
 
     public GameController(MenuItem[] menu) {
         if (menu == null || menu.length == 0) {
@@ -37,6 +37,7 @@ public class GameController {
     // Step 1: Arrivals
     public void startTurn() {
         turn++;
+        turnInProgress = true;
         for (int t : ARRIVAL_TURNS) {
             if (t == turn) {
                 Customer c = createCustomer(nextCustomerId++); //new change for Stage 2
@@ -107,6 +108,7 @@ public class GameController {
         finishEating(); // This turn must wait until next turn to pay
         applyWaitingLoss();
         happyHour.endTurn();
+        turnInProgress = false; 
     }
 
     private void payOldestReadyCustomer() {
@@ -156,14 +158,18 @@ public class GameController {
     }
 
     public boolean canActivateHappyHour(){
-        return happyHour.canActivate();
+        return happyHour.canActivate() && turnInProgress && !waiterDone;
+    }
+
+    public boolean isHappyHourUsed(){
+        return happyHour.hasBeenUsed();
     }
 
     public ActionResult activateHappyHour() {
         if (!happyHour.canActivate()) {
             return ActionResult.fail("Happy Hour has already been used this game.");
         }
-        if (waiterDone) {
+        if (!turnInProgress || waiterDone) {
             return ActionResult.fail("Happy Hour can only be switched on at the start of a turn.");
         }
         happyHour.activate();
