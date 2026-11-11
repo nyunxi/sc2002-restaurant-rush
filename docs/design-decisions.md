@@ -1,7 +1,7 @@
 # Design decisions
 
-> Status: Stage 2, updated to match the code on main (9 Nov 2026).
-> Scope: Stage 1 and 2. Nothing from Stage 3 (Host, ComboMeal, Happy Hour) appears.
+> Status: Stage 3, updated to match the code on main (11 Nov 2026).
+> Scope: Stage 1, 2 and Stage 3.
 
 ## Roles
 
@@ -10,7 +10,7 @@
 | Paige | A: Customers | Customer, CustomerState | Stage 2 |
 | Enoch | B: Menu and pricing | MenuItem, Menu, Order, OrderStatus, Money, IllegalOrderStateException | Stage 3 |
 | Rajvi | C: Turn engine and staff | GameController, Waiter, Chef, Cashier, Table, ActionResult | Stage 1 core, integration |
-| Yunxi | D: CLI and release | ConsoleUI, InputReader, Main, scripted test runs, tags, README | Releases |
+| Yunxi | D: CLI and release | ConsoleUI, InputReader, Main, scripted test runs, tags, README. Stage 3: also Host and Happy Hour activation in GameController (taken over from C) | Releases |
 
 ## Classes (Boundary / Control / Entity)
 
@@ -22,7 +22,10 @@ All classes are in package `restaurantrush` (folder `src/restaurantrush/`).
 | `ConsoleUI` | Boundary | Displays state and results, reads the manager's choices, shows failure reasons. Contains no game rules | D |
 | `InputReader` | Boundary | Reads a number in a range, re-prompts on invalid input, throws `GameQuitException` on `q` or when input ends | D |
 | `GameQuitException` | Boundary (exception) | Signals that the player quit or input ran out. Caught in `Main`; the game stops with no result. Its own type, so `Main` never hides an `IllegalStateException` caused by a real bug | D |
-| `GameController` | Control | Runs the turn steps in order. Owns the queue, tables, customers, orders, staff and turn counter. Decides victory or defeat | C + D |
+| `GameController` | Control | Runs the turn steps in order. Owns the queue, tables, customers, orders, staff, Happy Hour and turn counter. Decides victory or defeat | C + D |
+| `Host` | Entity (staff) | Stage 3. Seats at most one queued customer per turn, on top of the Waiter's task | D |
+| `HappyHour` | Entity | Stage 3. Once-per-game pricing policy: tracks whether it was used and the turns remaining, applies 20% off | B |
+| `ComboMeal` | Entity | Stage 3. A `MenuItem` made of two existing items: units = sum, price = 90% of their total | B |
 | `Waiter` | Entity (staff) | Seats a customer, takes an order, serves a READY order. One task per turn | C |
 | `Chef` | Entity (staff) | Advances one order by one preparation unit. One unit per turn | C |
 | `Cashier` | Entity (staff) | Collects payment from one READY_TO_PAY customer per turn. Keeps revenue, paid count and the satisfaction total used for the average | C |
@@ -32,7 +35,7 @@ All classes are in package `restaurantrush` (folder `src/restaurantrush/`).
 | `VIPCustomer` | Entity | A customer who loses 5 satisfaction per waiting turn and gets 10% off the bill. Overrides `getWaitingLoss()`, `getDiscountRate()`, `getCustomerType()` | A |
 | `CriticCustomer` | Entity | A customer who loses 12 satisfaction per waiting turn and always orders the most expensive dish. Overrides `getWaitingLoss()`, `chooseItem()`, `getCustomerType()` | A |
 | `MenuItem` | Entity | Name, price in cents, preparation units. Immutable | B |
-| `Menu` | Entity | Holds the three menu items | B |
+| `Menu` | Entity | Holds the three dishes and from stage 3, 2 combos | B |
 | `Order` | Entity | Links a customer and an item. Locks the price when created. Tracks units done and status, and rejects illegal status changes | B |
 | `Money` | Utility | Formats cents as text, e.g. 1800 becomes "$18.00" | B |
 | `IllegalOrderStateException` | Exception | Thrown by `Order` when an action does not fit its current status | B |
@@ -58,6 +61,17 @@ Useful for the design discussion. Each entry: the decision, why, and the alterna
 - **Critic rule: most expensive dish.** Group-defined. Deterministic, so runs stay reproducible, and a real method override rather than just a different number. Effect: the Critic holds the kitchen for 2 turns while losing 12 per waiting turn.
 - **Bill locked at order time.** The discount is applied once in `Order`'s constructor; the UI and Cashier both read the stored bill, so the price shown always matches the price charged.
 - **What Stage 1 did not anticipate.** The waiting loss of 8 was hard-coded in `Customer`, so Stage 2 had to edit `Customer` as well as add subclasses. Now that the loss is overridable, a new customer type needs no change to `Customer`.
+
+### Stage 3
+
+- **Host is its own class.** It has its own per-turn state (`hasActed`) and is a separate role in the brief. Alternative: a shared `Staff` superclass with one `seat` method for Host and Waiter (less repeated code, but it changes the Stage 1 `Waiter`, and the brief says not to add abstractions just to satisfy a checklist). The Host never sets `waiterDone`, so it does not use the Waiter's task or block the Chef.
+- **ComboMeal extends MenuItem.** A combo is used everywhere a dish is (menu, order, Chef, bill), so it inherits from `MenuItem` and overrides `toString()`. Nothing else had to learn about combos: `ConsoleUI` prints the menu with `" " + item`, and dynamic binding picks the combo's `toString()`.
+- **Happy Hour lives in GameController, read through queries.** The UI gets `canActivateHappyHour()`, `isHappyHourActive()`, `getHappyHourTurnsRemaining()` and `isHappyHourUsed()`, never the `HappyHour` object, so it cannot call `activate()` and skip the rules.
+- **"Start of a turn" is enforced in the controller.** `activateHappyHour()` succeeds only if Happy Hour is unused, a turn is in progress (`turnInProgress`, set in `startTurn()`, cleared in `endTurn()`) and the Waiter has not acted. `waiterDone` alone could not tell "turn not started" from "turn started, Waiter not done yet".
+- **Recovery is split across two places.** The first active turn recovers inside `activateHappyHour()`, because `startTurn()` has already run. The second recovers in `startTurn()`. Each customer decides for itself whether it recovers (`recoverHappyHourSatisfaction()`), so the controller has no state checks.
+- **Price locked at order time.** `Waiter.takeOrder` passes Happy Hour into `new Order(...)`, which applies the VIP discount, then 20% if active, and stores the result. Ending Happy Hour never changes an existing bill.
+- **Rounding: once per discount.** Each discount is rounded to the nearest cent as it is applied (`Money.percentOff`), so a VIP order in Happy Hour is rounded twice. The brief does not say whether to round per step or once at the end; its $10.80 example comes out exact either way.
+- **Changes to earlier classes (brief 4.4).** `Waiter.takeOrder` gained a `HappyHour` parameter (the price must be fixed when the order is created). `Menu` adds the combos. `Customer` adds `recoverHappyHourSatisfaction()`. `GameController` adds the Host, Happy Hour and the turn-in-progress flag. `ConsoleUI` shows the menu and the two new prompts. No Stage 1 or 2 rule was rewritten.
 
 ## Enums
 
@@ -177,8 +191,23 @@ The UI writes its own success messages, since `ok()` carries no detail.
 ### Waiter (owner: C)
 - `void startTurn()`: resets the task
 - `ActionResult seat(Customer c, Table t)`: fails if the task is used, the customer is not WAITING or the table is occupied; calls `c.seat()`
-- `ActionResult takeOrder(Customer c, MenuItem[] menu, List<Order> orders, HappyHour happyHour)`: fails if the task is used or the customer is not SEATED. The customer chooses the item, the Order is created and added to `orders`, then `c.placeOrder(order)`
+- `ActionResult takeOrder(Customer c, MenuItem[] menu, List<Order> orders, HappyHour happyHour)`: fails if the task is used or the customer is not SEATED (the reason names the customer's current state). The customer chooses the item, the Order is created with the current Happy Hour so its price is locked, added to `orders`, then `c.placeOrder(order)`
 - `ActionResult serve(Order o)`: fails if the task is used or the order is not READY; calls `o.markServed()` and the customer's `markServed()`
+
+### Host (owner: D, Stage 3)
+- `void startTurn()`: resets the action
+- `boolean hasActed()`
+- `ActionResult seat(Customer c, Table t)`: fails if the Host has already seated someone this turn, the customer is not WAITING or the table is occupied; calls `c.seat()`
+
+### HappyHour (owner: B, Stage 3)
+- `DISCOUNT_PERCENT = 20`, `DURATION_TURNS = 2`, `SATISFACTION_RECOVERY = 15`
+- `boolean canActivate()`, `void activate()`: throws `IllegalStateException` if already used
+- `boolean isActive()`, `int getTurnsRemaining()`, `boolean hasBeenUsed()`, `void endTurn()`: counts down
+- `int applyTo(int cents)`: 20% off if active
+
+### ComboMeal extends MenuItem (owner: B, Stage 3)
+- `ComboMeal(MenuItem first, MenuItem second)`: name "First + Second Combo", price `Money.percentOff(total, 10)`, units = sum
+- `List<MenuItem> getComponents()`, `int getSeparatePriceCents()`, `toString()` adds " - 10% off $X" (X = separate price)
 
 ### Chef (owner: C)
 - `void startTurn()`
@@ -208,6 +237,13 @@ Turn flow:
 
 A failed action does not use up the staff task.
 
+### Stage 3:
+- `boolean canActivateHappyHour()`: unused, turn in progress, Waiter not acted yet
+- `ActionResult activateHappyHour()`: fails otherwise; applies the first +15 recovery
+- `boolean isHappyHourActive()`, `int getHappyHourTurnsRemaining()`, `boolean isHappyHourUsed()`
+- `boolean canHostSeat()`: turn in progress, Host not acted, someone queued, a table free
+- `ActionResult hostSeat(Customer c, Table t)`: also fails if the customer is not in the queue
+
 Read-only state for the display:
 - `int getTurn()`
 - `int getRevenueCents()`, `int getPaidCount()`, `int getServedCount()`, `int getUnhappyDepartures()`
@@ -220,7 +256,7 @@ Read-only state for the display:
 
 ### ConsoleUI (owner: D)
 - `ConsoleUI(GameController game, InputReader input)`
-- `void run()`: loop until `game.isGameOver()`: startTurn, show state, ask Waiter, ask Chef, endTurn, show results; then show Victory or Defeat
+- `void run()`: show the menu once, then loop until `game.isGameOver()`: startTurn, show state, ask Happy Hour (only while it can be activated), ask Host (only when it can seat someone), ask Waiter, ask Chef, endTurn, show results; then show Victory or Defeat
 - `static String formatCents(int cents)`: delegates to `Money.format`
 
 ### InputReader (owner: D)
@@ -229,7 +265,9 @@ Read-only state for the display:
 
 ## Food-choice rule
 
-Customer `id` (1 to 6, in arrival order) orders `menu[(id - 1) % 3]`. This is a zero-based array index: 0 = Salad, 1 = Burger, 2 = Pasta.
+Customer `id` (1 to 6, in arrival order) orders `menu[(id - 1) % menu.length]`. This is a zero-based array index: 0 = Salad, 1 = Burger, 2 = Pasta, and from Stage 3, 3 = Salad + Pasta Combo, 4 = Salad + Burger Combo.
+
+Stages 1 and 2 (3 menu items, so `% 3`):
 
 | Customer | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|---|---|---|---|---|---|
@@ -237,8 +275,17 @@ Customer `id` (1 to 6, in arrival order) orders `menu[(id - 1) % 3]`. This is a 
 
 Deterministic, so every run with the same inputs gives the same game. The order is printed when the Waiter takes it.
 
-Stage 2: VIPs follow the same rule. The Critic ignores it and always orders the most expensive dish (Pasta, $18.00, 2 units). This is a group-defined Critic behaviour and was chosen because it is deterministic (runs stay reproducible) and it is a real method override, not just a different number. 
+Stage 2: VIPs follow the same rule. The Critic ignores it and always orders the most expensive dish (Pasta, $18.00, 2 units). This is a group-defined Critic behaviour and was chosen because it is deterministic (runs stay reproducible) and it is a real method override, not just a different number.
 - Effect: The Critic holds the kitchen for 2 turns while losing 12 per waiting turn.
+
+Stage 3 (combo-choice rule, brief 4.3): the same rule now runs over all five menu items (`% 5`), and the Critic's "most expensive" now includes combos. With customer 2 as the VIP and customer 4 as the Critic:
+
+| Customer | 1 | 2 (VIP) | 3 | 4 (Critic) | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Orders | Salad | Burger | Pasta | Salad + Pasta Combo | Salad + Burger Combo | Salad |
+
+We kept the rule instead of adding a separate combo rule: it needs no new code or type checks, both combos get ordered, and the game stays winnable (see `tests/victory.txt`). The trade-off is that choices depend on the menu's order and length, so adding the combos to `Menu` changed what customers 4 to 6 order without any change to `Customer`.
+- Effect: The Critic now holds the kitchen for 3 turns ($24.30, 3 units) while losing 12 per waiting turn.
 
 ## Decisions (formerly open questions)
 
