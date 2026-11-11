@@ -177,7 +177,7 @@ The UI writes its own success messages, since `ok()` carries no detail.
 ### Waiter (owner: C)
 - `void startTurn()`: resets the task
 - `ActionResult seat(Customer c, Table t)`: fails if the task is used, the customer is not WAITING or the table is occupied; calls `c.seat()`
-- `ActionResult takeOrder(Customer c, MenuItem[] menu, List<Order> orders)`: fails if the task is used or the customer is not SEATED. The customer chooses the item, the Order is created and added to `orders`, then `c.placeOrder(order)`
+- `ActionResult takeOrder(Customer c, MenuItem[] menu, List<Order> orders, HappyHour happyHour)`: fails if the task is used or the customer is not SEATED. The customer chooses the item, the Order is created and added to `orders`, then `c.placeOrder(order)`
 - `ActionResult serve(Order o)`: fails if the task is used or the order is not READY; calls `o.markServed()` and the customer's `markServed()`
 
 ### Chef (owner: C)
