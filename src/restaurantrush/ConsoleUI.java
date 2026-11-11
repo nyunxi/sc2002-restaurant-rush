@@ -23,6 +23,7 @@ public class ConsoleUI {
             game.startTurn();
             showTurnState();
             askHappyHour();
+            askHost();
             askWaiter();
             askChef();
             game.endTurn();
@@ -65,7 +66,7 @@ public class ConsoleUI {
             }
         }
 
-        System.out.println("Staff this turn: Waiter (1 task), Chef (1 preparation unit), Cashier (automatic)");
+        System.out.println("Staff this turn: Host (seats 1), Waiter (1 task), Chef (1 preparation unit), Cashier (automatic)");
     }
 
     // ---------- Manager choices ----------
@@ -167,6 +168,28 @@ public class ConsoleUI {
         }
     }
     
+    private void askHost() {
+        if (!game.canHostSeat()) {
+            return;                       // nobody to seat or no free table: skip the prompt
+        }
+        while (true) {
+            System.out.println();
+            System.out.println("Host: 1 Seat a queued customer | 0 Skip | q Quit");
+            int task = input.readInt("Choose Host task: ", 0, 1);
+            if (task == 0) {
+                System.out.println("The Host seats no one.");
+                return;
+            }
+            Customer customer = pickCustomer("Host seats which customer?", game.getQueue());
+            Table table = pickTable();
+            if (report(game.hostSeat(customer, table))) {
+                System.out.println("Host seated Customer " + customer.getCustomerId()
+                        + " at Table " + table.getTableId() + ".");
+                return;
+            }
+        }
+    }
+
     private void askHappyHour(){
         if (!game.canActivateHappyHour()){
             return;
@@ -183,7 +206,7 @@ public class ConsoleUI {
         if (game.isHappyHourActive()){
             return "Happy Hour: ACTIVE, " + game.getHappyHourTurnsRemaining() + " turns(s) left including this one";
         }
-        return game.canActivateHappyHour() ? "Happy Hour: available (once per game)" : "Happy Hour: used";
+        return game.isHappyHourUsed() ? "Happy Hour: used" : "Happy Hour: available (once per game)";
     }
 
     // ---------- Selection helpers ----------

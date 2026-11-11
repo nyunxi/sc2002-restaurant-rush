@@ -15,6 +15,7 @@ public class GameController {
     private final List <Order> orders = new ArrayList<>(); // Oldest first 
     private final Map<Order, Integer> servedOnTurn = new HashMap<>();
     private final Waiter waiter = new Waiter();
+    private final Host host = new Host(); //Stage 3 addition
     private final Chef chef = new Chef();
     private final Cashier cashier = new Cashier();
     private int turn = 0;
@@ -46,6 +47,7 @@ public class GameController {
             }
         }
         waiter.startTurn();
+        host.startTurn();
         chef.startTurn();
         cashier.startTurn();
         waiterDone = false;
@@ -75,6 +77,29 @@ public class GameController {
         return r;
     }
 
+    // Stage 3: Host seats at most one queued customer per turn, on top of the Waiter's task
+    public boolean canHostSeat() {
+        return turnInProgress && !host.hasActed() && !queue.isEmpty() && hasFreeTable();
+    }
+
+    public ActionResult hostSeat(Customer c, Table t) {
+        if (!turnInProgress) {return ActionResult.fail("The Host can only act during a turn.");}
+        if (!queue.contains(c)) {return ActionResult.fail("That customer is not in the waiting queue.");}
+        if (!Arrays.asList(tables).contains(t)) {return ActionResult.fail("That table is not in this restaurant.");}
+        ActionResult r = host.seat(c, t);
+        if (r.isSuccess()) {
+            queue.remove(c);   // no waiterDone change: the Host does not use the Waiter's task
+        }
+        return r;
+    }
+
+    private boolean hasFreeTable() {
+        for (Table t : tables) {
+            if (t.isFree()) {return true;}
+        }
+        return false;
+    }
+    
     public ActionResult waiterTakeOrder(Customer c) { // Waiter takes customer's order
         if (!customers.contains(c)) {return ActionResult.fail("That customer is not in this restaurant.");}
         ActionResult r = waiter.takeOrder(c, menu, orders, happyHour);
