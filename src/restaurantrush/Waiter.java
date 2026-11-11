@@ -27,7 +27,7 @@ public class Waiter {
     }
 
     // Task 2: Take a seated customer's order
-    public ActionResult takeOrder(Customer c, MenuItem[] menu, List<Order> orders) {
+    public ActionResult takeOrder(Customer c, MenuItem[] menu, List<Order> orders, HappyHour happyHour) {
         // Fail if the task is already used
         if (hasActed) {
             return ActionResult.fail("Waiter is occupied.");
@@ -35,7 +35,7 @@ public class Waiter {
             return ActionResult.fail("Customer has not been seated.");
         } else {
             MenuItem item = c.chooseItem(menu);
-            Order order = new Order(c, item);
+            Order order = new Order(c, item, happyHour);
             orders.add(order);
             c.placeOrder(order);
             this.hasActed = true;
