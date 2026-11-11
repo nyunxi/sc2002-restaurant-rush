@@ -8,7 +8,7 @@ public class VIPCustomer extends Customer {
 
     @Override 
     public int getWaitingLoss() { 
-        return 5; //get 5 instead of 8 because Java chooses getWaitingLoss() to run from the object's runtime type not the decalred type (dynamic dispatch)
+        return 5; //get 5 instead of 8 because Java chooses getWaitingLoss() to run from the object's runtime type not the declared type (dynamic dispatch)
     }
 
     @Override 

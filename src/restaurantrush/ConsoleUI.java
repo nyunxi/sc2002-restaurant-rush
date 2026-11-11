@@ -127,7 +127,7 @@ public class ConsoleUI {
         Order order = customer.getOrder();
         return "Waiter took Customer " + customer.getCustomerId() + "'s order: "
                 + (order == null ? "?" : order.getItem().getName() + ", " + order.getBillDisplay()
-                    + (order.isHappyHourPrice() ? " (Happy Hour price)" : "")) + "."; //used ternary operator where if order is null, print "?" else print the order itembu
+                    + (order.isHappyHourPrice() ? " (Happy Hour price)" : "")) + "."; //used ternary operator where if order is null, print "?" else print the order item and bill
     }
 
     private String chooseServe() {
