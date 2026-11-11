@@ -33,7 +33,6 @@ class Customer <<entity>> {
 }
 
 class VIPCustomer <<entity>> {
-  + VIPCustomer(customerId : int)
   + getWaitingLoss() : int
   + getDiscountRate() : double
   + getCustomerType() : String
@@ -344,6 +343,10 @@ ConsoleUI .[#999999].> Money
 ' Stage 3
 HappyHour .[#999999].> Money
 ComboMeal .[#999999].> Money
+
+' Stage 3: show which classes use the enums
+Customer .[#999999].> CustomerState
+Order .[#999999].> OrderStatus
 
 note right of Customer
   <b>Encapsulation</b>
