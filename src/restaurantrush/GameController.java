@@ -215,7 +215,7 @@ public class GameController {
     public boolean isGameOver(){return turn >= TOTAL_TURNS;}
 
     public boolean isVictory() {
-        return cashier.getPaidCount() >= 4 && cashier.getRevenueCents() >= 4500 && cashier.getAverageSatisfaction() >= 60; // 4 customers paif, revenue cents >= 4500, average satisfaction >= 60
+        return cashier.getPaidCount() >= 4 && cashier.getRevenueCents() >= 4500 && cashier.getAverageSatisfaction() >= 60; // 4 customers paid, revenue cents >= 4500, average satisfaction >= 60
     }
 
     // Read-only states for user interface (UI)
