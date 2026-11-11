@@ -45,7 +45,7 @@ public class HappyHour {
   @Override
   public String toString() {
     if (isActive()) {
-      return "Happy Hour: ACTIVE, " + turnsRemaining + " turn(s) left inluding this one";
+      return "Happy Hour: ACTIVE, " + turnsRemaining + " turn(s) left including this one";
     }
     return used ? "Happy Hour: used" : "Happy Hour: available (once per game)";
   }

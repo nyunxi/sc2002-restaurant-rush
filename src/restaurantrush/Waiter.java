@@ -32,7 +32,7 @@ public class Waiter {
         if (hasActed) {
             return ActionResult.fail("Waiter is occupied.");
         } else if(c.getState() != CustomerState.SEATED) {
-            return ActionResult.fail("Customer has not been seated.");
+            return ActionResult.fail("Customer " + c.getCustomerId() + " cannot order now (" + c.getState() + ").");
         } else {
             MenuItem item = c.chooseItem(menu);
             Order order = new Order(c, item, happyHour);
