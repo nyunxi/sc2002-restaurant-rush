@@ -6,13 +6,13 @@ title Stage 3 sequence diagram: the VIP's order, with and without Happy Hour (te
 legend top left
   <b>How to read this</b>
   Follow one customer: the VIP (Customer 2), from arrival to payment.
-  Solid arrow = method call. Dashed arrow = return value.
+  Solid arrow = method call. Dashed arrow = return value (void returns not drawn).
   <b>Manager choice:</b> switch on Happy Hour at turn 14 (opt box),
   which changes the VIP's price (alt box) and satisfaction.
 endlegend
 
 ' ============================================================
-' PARTICIPANTS 
+' PARTICIPANTS (all declared here, left to right)
 ' ============================================================
 actor Player
 participant "ui : ConsoleUI" as ui
@@ -28,8 +28,9 @@ participant Money <<utility>>
 
 ' ============================================================
 ' THE TURN LOOP (ConsoleUI.run)
+' Guard text is written WITHOUT [ ]: PlantUML adds the brackets.
 ' ============================================================
-loop [!isGameOver(), turns 1..18]
+loop while !isGameOver() (turns 1..18)
 
   ' ----------------------------------------------------------
   == Turns 1 to 3 ==
@@ -47,11 +48,11 @@ loop [!isGameOver(), turns 1..18]
     Id 2 -> VIPCustomer (the only place a subclass is named).
     vip joins the waiting queue.
   end note
-  return
+  deactivate game
 
-  note over Player, ui : Happy Hour answered 0 (No). Host seats no one.
+  note over Player, ui : Happy Hour prompt: 0 (No). Host seats no one.
 
-  Player -> ui : 1 (Waiter: seat)
+  Player -> ui : 1 (Waiter: seat a customer)
   ui -> game ++ : waiterSeat(vip, t2)
   game -> waiter ++ : seat(vip, t2)
   waiter -> t2 ++ : seat(vip)
@@ -62,9 +63,12 @@ loop [!isGameOver(), turns 1..18]
   return ok
 
   ui -> game ++ : endTurn()
-  game -> vip : loseWaitingSatisfaction()
+  game -> game : applyWaitingLoss()
+  loop for each waiting customer
+    game -> vip : loseWaitingSatisfaction()
+  end
   note right of vip : satisfaction 100 -> 95
-  return
+  deactivate game
 
   ' ----------------------------------------------------------
   ...
@@ -81,12 +85,13 @@ loop [!isGameOver(), turns 1..18]
   return true
   return true
 
-  opt [Player answers 1 (Yes)]
-    Player -> ui : 1
+  opt Player answers 1 (Yes)
+    Player -> ui : 1 (Yes: switch on Happy Hour)
     ui -> game ++ : activateHappyHour()
     game -> hh : activate()
     note right of hh : used = true, 2 turns left
-    loop [for each customer]
+    game -> game : recoverWaitingCustomers()
+    loop for each customer
       game -> vip : recoverHappyHourSatisfaction()
     end
     note right of vip
@@ -105,7 +110,7 @@ loop [!isGameOver(), turns 1..18]
   return false
   note right of game : both tables full, Host skipped
 
-  Player -> ui : 2 (Waiter: take order)
+  Player -> ui : 2 (Waiter: take an order)
   ui -> game ++ : waiterTakeOrder(vip)
   game -> waiter ++ : takeOrder(vip, menu, orders, hh)
 
@@ -131,17 +136,18 @@ loop [!isGameOver(), turns 1..18]
   order -> hh ++ : isActive()
   return true
 
-  alt [hh.isActive(): Happy Hour ON (this run)]
+  alt hh.isActive() == true: Happy Hour ON (this run)
     order -> hh ++ : applyTo(1350)
     hh -> Money ++ : percentOff(1350, 20)
     return 1080
     return 1080
     note right of order : 20% off: $13.50 -> $10.80\nbillCents = 1080, locked
-  else [Happy Hour OFF (Player answered 0)]
+  else hh.isActive() == false: Happy Hour OFF (Player answered 0)
     note right of order : no extra discount\nbillCents = 1350 ($13.50), locked
   end
   return order
 
+  note right of waiter : orders.add(order)
   waiter -> vip : placeOrder(order)
   note right of vip : SEATED -> ORDERED
   return ok
@@ -150,26 +156,30 @@ loop [!isGameOver(), turns 1..18]
   note over chef : Chef works on Customer 5's combo (not shown)
 
   ui -> game ++ : endTurn()
-  game -> vip : loseWaitingSatisfaction()
+  game -> game : applyWaitingLoss()
+  loop for each waiting customer
+    game -> vip : loseWaitingSatisfaction()
+  end
   note right of vip : satisfaction 65 -> 60
   game -> hh : endTurn()
   note right of hh : 2 -> 1 turn left
-  return
+  deactivate game
 
   ' ----------------------------------------------------------
   == Turn 15: the Chef prepares ==
   ui -> game ++ : startTurn()
   game -> hh ++ : isActive()
   return true
-  loop [for each customer]
+  game -> game : recoverWaitingCustomers()
+  loop for each customer
     game -> vip : recoverHappyHourSatisfaction()
   end
   note right of vip : second Happy Hour turn: +15 again\nsatisfaction 60 -> 75
-  return
+  deactivate game
 
   note over waiter : Waiter acts first (the Chef is blocked until waiterDone)
 
-  Player -> ui : 1 (Chef: prepare)
+  Player -> ui : 1 (Chef: prepare an order)
   ui -> game ++ : chefPrepare(order)
   game -> chef ++ : prepare(order)
   chef -> order ++ : canAdvance()
@@ -181,15 +191,18 @@ loop [!isGameOver(), turns 1..18]
   return ok
 
   ui -> game ++ : endTurn()
-  game -> vip : loseWaitingSatisfaction()
+  game -> game : applyWaitingLoss()
+  loop for each waiting customer
+    game -> vip : loseWaitingSatisfaction()
+  end
   note right of vip : satisfaction 75 -> 70
   game -> hh : endTurn()
   note right of hh : 1 -> 0, Happy Hour over
-  return
+  deactivate game
 
   ' ----------------------------------------------------------
   == Turn 16: the Waiter serves ==
-  Player -> ui : 3 (Waiter: serve)
+  Player -> ui : 3 (Waiter: serve a ready order)
   ui -> game ++ : waiterServe(order)
   game -> waiter ++ : serve(order)
   waiter -> order ++ : isReady()
@@ -205,23 +218,30 @@ loop [!isGameOver(), turns 1..18]
   ' ----------------------------------------------------------
   == Turn 17: the VIP eats ==
   ui -> game ++ : endTurn()
-  note right of game : payOldestReadyCustomer() pays Customer 5 first\n(only 1 payment per turn)
+  game -> game : payOldestReadyCustomer()
+  note right of game : pays Customer 5 first\n(only 1 payment per turn)
+  game -> game : finishEating()
   game -> vip : finishEating()
   note right of vip : EATING -> READY_TO_PAY\n(served on turn 16 < 17)
-  return
+  deactivate game
 
   ' ----------------------------------------------------------
   == Turn 18: the VIP pays ==
   ui -> game ++ : endTurn()
+  game -> game : payOldestReadyCustomer()
   game -> cashier ++ : processPayment(order, t2)
   cashier -> order : markPaid()
+  note right of order : SERVED -> PAID
   cashier -> vip : markPaid()
+  note right of vip : READY_TO_PAY -> PAID
   cashier -> t2 : free()
   cashier -> order ++ : getBillCents()
   return 1080
+  cashier -> vip ++ : getSatisfaction()
+  return 70
   note right of cashier : revenue += 1080\nsatisfaction 70 recorded
   return ok
-  return
+  deactivate game
 
 end
 
@@ -229,10 +249,14 @@ end
 ' RESULT CHECK (ConsoleUI.showFinalResult)
 ' ============================================================
 ui -> game ++ : isVictory()
-game -> cashier : getPaidCount()
-game -> cashier : getRevenueCents()
-game -> cashier : getAverageSatisfaction()
+game -> cashier ++ : getPaidCount()
+return 4
+game -> cashier ++ : getRevenueCents()
+return 5940
+game -> cashier ++ : getAverageSatisfaction()
+return 82.5
 return true
+note right of game : 4 >= 4, $59.40 >= $45.00, 82.5 >= 60
 
 note over ui, cashier
   <b>How the manager's choice changes an outcome</b>
