@@ -21,6 +21,8 @@ public class GameController {
     private int nextCustomerId = 1;
     private int unhappyDepartures = 0;
     private boolean waiterDone  =false; // Waiter must act/wait before the chef
+    private final HappyHour happyHour = new HappyHour(); //Stage 3: Introduction of HappyHour
+    private boolean turnInProgress = false; //true between startTurn() and endTurn()
 
     public GameController(MenuItem[] menu) {
         if (menu == null || menu.length == 0) {
@@ -35,6 +37,7 @@ public class GameController {
     // Step 1: Arrivals
     public void startTurn() {
         turn++;
+        turnInProgress = true;
         for (int t : ARRIVAL_TURNS) {
             if (t == turn) {
                 Customer c = createCustomer(nextCustomerId++); //new change for Stage 2
@@ -46,6 +49,9 @@ public class GameController {
         chef.startTurn();
         cashier.startTurn();
         waiterDone = false;
+        if (happyHour.isActive()){
+            recoverWaitingCustomers();
+        }
     }
 
     //Stage 2: Name the customer subclasses 
@@ -71,7 +77,7 @@ public class GameController {
 
     public ActionResult waiterTakeOrder(Customer c) { // Waiter takes customer's order
         if (!customers.contains(c)) {return ActionResult.fail("That customer is not in this restaurant.");}
-        ActionResult r = waiter.takeOrder(c, menu, orders);
+        ActionResult r = waiter.takeOrder(c, menu, orders, happyHour);
         if (r.isSuccess()) {waiterDone = true;}
         return r;
     }
@@ -101,6 +107,8 @@ public class GameController {
         payOldestReadyCustomer(); // Customer who becomes ready to pay before finishEating()
         finishEating(); // This turn must wait until next turn to pay
         applyWaitingLoss();
+        happyHour.endTurn();
+        turnInProgress = false; 
     }
 
     private void payOldestReadyCustomer() {
@@ -147,6 +155,35 @@ public class GameController {
             if (t.getCustomer() == c) {return t;}
         }
         return null;
+    }
+
+    public boolean canActivateHappyHour(){
+        return happyHour.canActivate() && turnInProgress && !waiterDone;
+    }
+
+    public boolean isHappyHourUsed(){
+        return happyHour.hasBeenUsed();
+    }
+
+    public ActionResult activateHappyHour() {
+        if (!happyHour.canActivate()) {
+            return ActionResult.fail("Happy Hour has already been used this game.");
+        }
+        if (!turnInProgress || waiterDone) {
+            return ActionResult.fail("Happy Hour can only be switched on at the start of a turn.");
+        }
+        happyHour.activate();
+        recoverWaitingCustomers();       // first active turn
+        return ActionResult.ok();
+    }
+
+    public boolean isHappyHourActive() { return happyHour.isActive(); }
+    public int getHappyHourTurnsRemaining() { return happyHour.getTurnsRemaining(); }
+
+    private void recoverWaitingCustomers() {
+        for (Customer c : customers) { //enhanced loop for the customer list
+            c.recoverHappyHourSatisfaction();
+        }
     }
 
     // Step 6: Result

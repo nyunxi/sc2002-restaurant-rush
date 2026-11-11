@@ -22,6 +22,7 @@ public class ConsoleUI {
         while (!game.isGameOver()) {
             game.startTurn();
             showTurnState();
+            askHappyHour();
             askWaiter();
             askChef();
             game.endTurn();
@@ -44,6 +45,7 @@ public class ConsoleUI {
         System.out.println("========== Turn " + game.getTurn() + " of " + GameController.TOTAL_TURNS + " ==========");
         System.out.println("Revenue: " + formatCents(game.getRevenueCents()));
         System.out.println("Average satisfaction (paid): " + formatAverage());
+        System.out.println(happyHourStatus());
 
         System.out.println("Waiting queue:");
         List<Customer> queue = game.getQueue();
@@ -123,7 +125,8 @@ public class ConsoleUI {
         }
         Order order = customer.getOrder();
         return "Waiter took Customer " + customer.getCustomerId() + "'s order: "
-                + (order == null ? "?" : order.getItem().getName() + ", " + order.getBillDisplay()) + "."; //used ternary operator where if order is null, print "?" else print the order itembu
+                + (order == null ? "?" : order.getItem().getName() + ", " + order.getBillDisplay()
+                    + (order.isHappyHourPrice() ? " (Happy Hour price)" : "")) + "."; //used ternary operator where if order is null, print "?" else print the order itembu
     }
 
     private String chooseServe() {
@@ -162,6 +165,25 @@ public class ConsoleUI {
                 return;
             }
         }
+    }
+    
+    private void askHappyHour(){
+        if (!game.canActivateHappyHour()){
+            return;
+        }
+        System.out.println();
+        System.out.println("Happy Hour: 20% off orders taken, +15 satisfaction for waiting customers, lasts 2 turns. Once per game.");
+        int choice = input.readInt("Activate Happy Hour now? (1 Yes/ 0 No): ", 0, 1);
+        if (choice ==1 && report(game.activateHappyHour())){
+            System.out.println("Happy Hour is ON. " + happyHourStatus());
+        }
+    }
+
+    private String happyHourStatus(){
+        if (game.isHappyHourActive()){
+            return "Happy Hour: ACTIVE, " + game.getHappyHourTurnsRemaining() + " turns(s) left including this one";
+        }
+        return game.canActivateHappyHour() ? "Happy Hour: available (once per game)" : "Happy Hour: used";
     }
 
     // ---------- Selection helpers ----------
