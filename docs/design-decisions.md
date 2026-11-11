@@ -33,7 +33,7 @@ All classes are in package `restaurantrush` (folder `src/restaurantrush/`).
 | `ActionResult` | Entity (value) | Success or failure of a staff action, with a reason | C |
 | `Customer` | Entity | Holds id, satisfaction and state. Loses satisfaction while waiting. Chooses its own food. Has four overridable methods with regular behaviour as the default | A |
 | `VIPCustomer` | Entity | A customer who loses 5 satisfaction per waiting turn and gets 10% off the bill. Overrides `getWaitingLoss()`, `getDiscountRate()`, `getCustomerType()` | A |
-| `CriticCustomer` | Entity | A customer who loses 12 satisfaction per waiting turn and always orders the most expensive dish. Overrides `getWaitingLoss()`, `chooseItem()`, `getCustomerType()` | A |
+| `CriticCustomer` | Entity | A customer who loses 12 satisfaction per waiting turn and always orders the most expensive dish (stage 3, combos are included). Overrides `getWaitingLoss()`, `chooseItem()`, `getCustomerType()` | A |
 | `MenuItem` | Entity | Name, price in cents, preparation units. Immutable | B |
 | `Menu` | Entity | Holds the three dishes and from stage 3, 2 combos | B |
 | `Order` | Entity | Links a customer and an item. Locks the price when created. Tracks units done and status, and rejects illegal status changes | B |
@@ -71,7 +71,7 @@ Useful for the design discussion. Each entry: the decision, why, and the alterna
 - **Recovery is split across two places.** The first active turn recovers inside `activateHappyHour()`, because `startTurn()` has already run. The second recovers in `startTurn()`. Each customer decides for itself whether it recovers (`recoverHappyHourSatisfaction()`), so the controller has no state checks.
 - **Price locked at order time.** `Waiter.takeOrder` passes Happy Hour into `new Order(...)`, which applies the VIP discount, then 20% if active, and stores the result. Ending Happy Hour never changes an existing bill.
 - **Rounding: once per discount.** Each discount is rounded to the nearest cent as it is applied (`Money.percentOff`), so a VIP order in Happy Hour is rounded twice. The brief does not say whether to round per step or once at the end; its $10.80 example comes out exact either way.
-- **Changes to earlier classes (brief 4.4).** `Waiter.takeOrder` gained a `HappyHour` parameter (the price must be fixed when the order is created). `Menu` adds the combos. `Customer` adds `recoverHappyHourSatisfaction()`. `GameController` adds the Host, Happy Hour and the turn-in-progress flag. `ConsoleUI` shows the menu and the two new prompts. No Stage 1 or 2 rule was rewritten.
+- **Changes to earlier classes (brief 4.4).** `Waiter.takeOrder` gained a `HappyHour` parameter (the price must be fixed when the order is created). `Menu` adds the combos. `Customer` adds `recoverHappyHourSatisfaction()`. `GameController` adds the Host, Happy Hour and the turn-in-progress flag. `ConsoleUI` shows the menu and the two new prompts. `Order` gained a constructor that takes `HappyHour`. `Waiter.takeOrder`'s failure message now names the customer's state. No Stage 1 or 2 rule was rewritten.
 
 ## Enums
 
@@ -98,12 +98,12 @@ Customers in WAITING, SEATED or ORDERED lose satisfaction at turn end. EATING an
 
 | Step | What happens | Who does it | Code owner |
 |---|---|---|---|
-| 1 Arrivals | On turns 1, 4, 7, 10, 13, 16 a new customer (satisfaction 100) joins the queue: customer 2 is a VIP, customer 4 a Critic, the rest Regular. Each staff member's task is reset | `GameController.startTurn()` | C |
-| Display | Turn, revenue, average satisfaction, queue, tables, each customer's satisfaction and order status, staff tasks | `ConsoleUI` reads `GameController` getters | D |
-| 2 Manager choices | Waiter: seat / take order / serve / wait. Then Chef: prepare / wait | `ConsoleUI` asks, `GameController` calls `Waiter` / `Chef` | D, C |
+| 1 Arrivals | On turns 1, 4, 7, 10, 13, 16 a new customer (satisfaction 100) joins the queue: customer 2 is a VIP, customer 4 a Critic, the rest Regular. Each staff member's task is reset (including the Host). On the second Happy Hour turn, waiting customers recover 15 | `GameController.startTurn()` | C, D |
+| Display | Turn, revenue, average satisfaction, Happy Hour status, queue, tables, each customer's satisfaction and order status, staff tasks. The menu is shown once at the start | `ConsoleUI` reads `GameController` getters | D |
+| 2 Manager choices | Happy Hour: switch on / not (only while unused). Host: seat / skip (only when someone is queued and a table is free). Waiter: seat / take order / serve / wait. Then Chef: prepare / wait | `ConsoleUI` asks, `GameController` calls `HappyHour` / `Host` / `Waiter` / `Chef` | D, C |
 | 3 Kitchen and serving | Waiter acts first, then Chef (enforced: `chefPrepare` fails until the Waiter has acted or waited). An order becomes READY when its last unit is done. Serving needs READY at the moment the Waiter acts | `Waiter`, `Chef`, `Order` | C, B |
 | 4 Payment and eating | First the Cashier pays one READY_TO_PAY customer: revenue updated, order and customer PAID, table freed. Then EATING customers served on an earlier turn become READY_TO_PAY (so they pay next turn at the earliest) | `GameController.endTurn()`, `Cashier`, `Customer`, `Table` | C, A |
-| 5 Waiting and abandonment | WAITING / SEATED / ORDERED customers lose their type's waiting loss (Regular 8, VIP 5, Critic 12; min 0). At 0: customer becomes LEFT; any order still IN_PREPARATION or READY is CANCELLED; the customer leaves the queue or their table is freed | `Customer.loseWaitingSatisfaction()`, `GameController` | A, C |
+| 5 Waiting and abandonment | WAITING / SEATED / ORDERED customers lose their type's waiting loss (Regular 8, VIP 5, Critic 12; min 0). At 0: customer becomes LEFT; any order still IN_PREPARATION or READY is CANCELLED; the customer leaves the queue or their table is freed. Then Happy Hour counts down one turn | `Customer.loseWaitingSatisfaction()`, `GameController`, `HappyHour.endTurn()` | A, C, D |
 | 6 Result | After turn 18: Victory if paid >= 4 AND revenue >= $45.00 AND average satisfaction of PAID customers >= 60 | `GameController.isVictory()` | C |
 
 Why serving is automatically correct: the Waiter acts before the Chef in every turn, so an order the Chef finishes this turn cannot be READY when the Waiter acts.
@@ -130,6 +130,7 @@ Only methods another person's code calls. Money is always `int` cents.
 - `void leave()`: any state except PAID or LEFT, to LEFT
 - `void loseWaitingSatisfaction()`: subtracts `getWaitingLoss()`, minimum 0. The caller checks the state first
 - `boolean hasLeft()`: true when satisfaction is 0
+- `void recoverHappyHourSatisfaction()`: +15, maximum 100, only if WAITING, SEATED or ORDERED and not at 0
 
 Each state-change method throws `IllegalStateException` if the customer is in the wrong state. Staff check the state before calling, so this only fires on a programming bug.
 
@@ -150,12 +151,13 @@ Each state-change method throws `IllegalStateException` if the customer is in th
 - `String getPriceDisplay()`, `String toString()`: e.g. "Pasta ($18.00, 2 units)"
 
 ### Menu (owner: B)
-- `Menu()`: creates Salad (900, 1), Burger (1500, 1), Pasta (1800, 2)
+- `Menu()`: creates Salad (900, 1), Burger (1500, 1), Pasta (1800, 2), then from Stage 3 a Salad + Pasta Combo and a Salad + Burger Combo
 - `List<MenuItem> getItems()`: unmodifiable, in that order
 - `MenuItem getItem(int index)`, `MenuItem findByName(String name)`, `int size()`
 
 ### Order (owner: B)
-- `Order(Customer customer, MenuItem item)`: status IN_PREPARATION, order number assigned. Bill locked here: menu price less `customer.getDiscountRate()`, rounded to the nearest cent
+- `Order(Customer customer, MenuItem item, HappyHour happyHour)`: status IN_PREPARATION, order number assigned. Bill locked here: menu price less `customer.getDiscountRate()`, then 20% off if Happy Hour is active, each step rounded to the nearest cent. `Order(Customer, MenuItem)` is kept and passes no Happy Hour
+- `boolean isHappyHourPrice()`, `int getSavingsCents()`
 - `Customer getCustomer()`, `MenuItem getItem()`, `int getOrderNumber()`
 - `OrderStatus getStatus()`
 - `int getUnitsDone()`, `int getUnitsRemaining()`, `String getProgress()`: e.g. "1/2 units"
@@ -171,6 +173,8 @@ Each state-change method throws `IllegalStateException` if the customer is in th
 
 ### Money (owner: B)
 - `static String format(int cents)`: e.g. 1800 becomes "$18.00", -50 becomes "-$0.50"
+- `static int percentOff(int cents, int percent)`: rounds to the nearest cent
+- `static int applyDiscountRate(int cents, double rate)`
 
 ### Table (owner: C)
 - `Table(int tableId)`
@@ -221,23 +225,23 @@ The UI writes its own success messages, since `ok()` carries no detail.
 
 ### GameController (owner: C + D, used by D)
 Setup:
-- `GameController(MenuItem[] menu)`: creates exactly 2 Tables numbered 1 and 2, one Waiter, one Chef, one Cashier. Turn counter starts at 0. `Main` builds the array with `new Menu().getItems().toArray(new MenuItem[0])`
+- `GameController(MenuItem[] menu)`: creates exactly 2 Tables numbered 1 and 2, one Waiter, one Chef, one Host, one Cashier and one HappyHour. Turn counter starts at 0. `Main` builds the array with `new Menu().getItems().toArray(new MenuItem[0])`
 - `static final int TOTAL_TURNS = 18`
 
 Turn flow:
-- `void startTurn()`: increments the turn, runs step 1, resets every staff task. Arrivals are created by customer number: 2 is a VIPCustomer, 4 a CriticCustomer, the rest Regular
+- `void startTurn()`: increments the turn, runs step 1, resets every staff task. Arrivals are created by customer number: 2 is a VIPCustomer, 4 a CriticCustomer, the rest Regular. Also resets the Host, and applies Happy Hour recovery on its second active turn
 - `ActionResult waiterSeat(Customer c, Table t)`: also fails if the customer is not in the queue
 - `ActionResult waiterTakeOrder(Customer c)`
 - `ActionResult waiterServe(Order o)`: records the turn it was served
 - `void waiterWait()`: the Waiter skips its task. Must be called when the manager chooses Wait, or `chefPrepare` stays blocked
 - `ActionResult chefPrepare(Order o)`: fails until the Waiter has acted or waited this turn
-- `void endTurn()`: runs steps 4 and 5
+- `void endTurn()`: runs steps 4 and 5, then counts Happy Hour down
 - `boolean isGameOver()`: true once turn 18 has been played
 - `boolean isVictory()`
 
 A failed action does not use up the staff task.
 
-### Stage 3:
+Stage 3:
 - `boolean canActivateHappyHour()`: unused, turn in progress, Waiter not acted yet
 - `ActionResult activateHappyHour()`: fails otherwise; applies the first +15 recovery
 - `boolean isHappyHourActive()`, `int getHappyHourTurnsRemaining()`, `boolean isHappyHourUsed()`
@@ -290,7 +294,7 @@ We kept the rule instead of adding a separate combo rule: it needs no new code o
 ## Decisions (formerly open questions)
 
 1. Display after arrivals: step 1 runs, then the display, so the manager sees the new arrival before choosing.
-2. Cashier order: the customer who became READY_TO_PAY first pays first. In Stage 1 at most one customer is ever READY_TO_PAY when the Cashier acts: the Waiter serves at most one order per turn, so no two customers finish eating on the same turn, and the Cashier pays every turn before new customers finish eating. The code therefore takes the first READY_TO_PAY customer in its order list, which is always that customer. If a later stage lets two customers be ready at once (e.g. two serves in one turn), `payOldestReadyCustomer()` must instead compare the turn each became ready, ties broken by lower customer id.
+2. Cashier order: the customer who became READY_TO_PAY first pays first. In Stage 1 at most one customer is ever READY_TO_PAY when the Cashier acts: the Waiter serves at most one order per turn, so no two customers finish eating on the same turn, and the Cashier pays every turn before new customers finish eating. The code therefore takes the first READY_TO_PAY customer in its order list, which is always that customer. If a later stage lets two customers be ready at once (e.g. two serves in one turn), `payOldestReadyCustomer()` must instead compare the turn each became ready, ties broken by lower customer id. Still true in Stage 3, the Host only seats customers, so the Waiter still serves at most one order per turn.
 3. When a customer leaves, any order not yet SERVED (IN_PREPARATION or READY) is cancelled. Customers with no order simply leave.
-4. Waiter menu: 1 Seat, 2 Take order, 3 Serve, 0 Wait. Seat picks from the queue, then a table (1 to 2). Take order picks from customers at tables. Serve and Chef Prepare pick from open orders (not PAID or CANCELLED). The controller decides whether the pick is allowed.
+4. Waiter menu: 1 Seat, 2 Take order, 3 Serve, 0 Wait. Seat picks from the queue, then a table (1 to 2). Take order picks from customers at tables. Serve and Chef Prepare pick from open orders (not PAID or CANCELLED). The controller decides whether the pick is allowed.Before the Waiter: Happy Hour 1 / 0, then Host 1 Seat / 0 Skip.
 5. Read-only access for the UI: rely on the "getters only" rule. No read-only interfaces in Stage 1.
