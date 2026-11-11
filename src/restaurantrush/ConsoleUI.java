@@ -183,7 +183,7 @@ public class ConsoleUI {
         if (game.isHappyHourActive()){
             return "Happy Hour: ACTIVE, " + game.getHappyHourTurnsRemaining() + " turns(s) left including this one";
         }
-        return game.canActivateHappyHour() ? "Happy Hour: available (once per game)" : "Happy Hour: used";
+        return game.isHappyHourUsed() ? "Happy Hour: used" : "Happy Hour: available (once per game)";
     }
 
     // ---------- Selection helpers ----------
