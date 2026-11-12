@@ -26,6 +26,12 @@ participant "vip : VIPCustomer" as vip
 participant "order : Order" as order
 participant Money <<utility>>
 
+note across
+  Only messages that affect the VIP are shown. startTurn()/endTurn() appear
+  only in turns where they change the VIP; payment and eating calls for
+  other customers are omitted.
+end note
+
 ' ============================================================
 ' THE TURN LOOP (ConsoleUI.run)
 ' Guard text is written WITHOUT [ ]: PlantUML adds the brackets.
@@ -73,7 +79,7 @@ loop while !isGameOver() (turns 1..18)
   ' ----------------------------------------------------------
   ...
   == Turns 5 to 13 ==
-  note over vip : SEATED and waiting. Loses 5 per turn (95 -> 50).
+  note over vip : SEATED and waiting while the manager prioritises\n[other customers' orders]. Loses 5 per turn (95 -> 50).
   ...
 
   ' ----------------------------------------------------------
@@ -207,13 +213,14 @@ loop while !isGameOver() (turns 1..18)
   game -> waiter ++ : serve(order)
   waiter -> order ++ : isReady()
   return true
-  waiter -> order : markServed()
-  note right of order : READY -> SERVED
-  waiter -> vip : markServed()
-  note right of vip : ORDERED -> EATING\n(eating customers lose no satisfaction)
-  return ok
-  note right of game : servedOnTurn.put(order, 16)
-  return ok
+  alt order.isReady() == true
+    waiter -> order : markServed()
+    note right of order : READY -> SERVED
+    waiter -> vip : markServed()
+    note right of vip : ORDERED -> EATING\n(eating customers lose no satisfaction)
+  else not READY (e.g. finished this turn)
+    note right of waiter : ActionResult.fail(reason)\nWaiter task not used; Player chooses again
+  end
 
   ' ----------------------------------------------------------
   == Turn 17: the VIP eats ==
@@ -259,7 +266,7 @@ return true
 note right of game : 4 >= 4, $59.40 >= $45.00, 82.5 >= 60
 
 note over ui, cashier
-  <b>How the manager's choice changes an outcome</b>
+    <b>How the manager's choice changes the outcome (VIP bill, satisfaction, final score)</b>
   With Happy Hour:    VIP pays $10.80 at satisfaction 70. Final: $59.40, average 82.5, VICTORY.
   Without Happy Hour: VIP pays $13.50 at satisfaction 40. Final: $62.10, average 71.0, VICTORY.
   Trade-off: $2.70 less revenue for a much happier VIP (+30).

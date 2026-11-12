@@ -1,7 +1,9 @@
 @startuml
 skinparam classAttributeIconSize 0
 hide empty members
-skinparam linetype ortho
+skinparam linetype polyline
+skinparam nodesep 90
+skinparam ranksep 110
 
 class Table <<entity>> {
   - tableId : int {readOnly}
@@ -33,6 +35,7 @@ class Customer <<entity>> {
 }
 
 class VIPCustomer <<entity>> {
+  + VIPCustomer(customerId : int)
   + getWaitingLoss() : int
   + getDiscountRate() : double
   + getCustomerType() : String
@@ -361,8 +364,10 @@ end note
 
 note bottom of VIPCustomer
   <b>Polymorphism (inheritance + overriding)</b>
-  VIP and Critic override getWaitingLoss(),
-  getDiscountRate(), getCustomerType(), chooseItem().
+  VIPCustomer overrides getWaitingLoss(),
+  getDiscountRate(), getCustomerType().
+  CriticCustomer overrides getWaitingLoss(),
+  getCustomerType(), chooseItem().
   GameController and ConsoleUI only call Customer
   methods; there is no instanceof anywhere.
   Critic's "most expensive item" now includes combos
@@ -434,7 +439,9 @@ end note
 legend top left
   Stage 3 class diagram
   New in Stage 3: Host, HappyHour, ComboMeal.
+  Customer is the Regular type; VIPCustomer and CriticCustomer subclass it.
   Simple getters and unused status checks omitted.
+  ConsoleUI picking and formatting helpers omitted.
   ConsoleUI picking and formatting helpers omitted.
 endlegend
 @enduml
