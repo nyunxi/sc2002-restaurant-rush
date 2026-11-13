@@ -37,7 +37,7 @@ All classes are in package `restaurantrush` (folder `src/restaurantrush/`).
 | `MenuItem` | Entity | Name, price in cents, preparation units. Immutable | B |
 | `Menu` | Entity | Holds the three dishes and from stage 3, 2 combos | B |
 | `Order` | Entity | Links a customer and an item. Locks the price when created. Tracks units done and status, and rejects illegal status changes | B |
-| `Money` | Utility | Formats cents as text, e.g. 1800 becomes "$18.00" | B |
+| `Money` | Utility | Formats cents as text, e.g. 1800 becomes "$18.00", and applies percentage discounts in whole cents (`percentOff`, `applyDiscountRate`) | B |
 | `IllegalOrderStateException` | Exception | Thrown by `Order` when an action does not fit its current status | B |
 
 ## Design choices
@@ -140,7 +140,7 @@ If a third promotion were added, we would refactor to `PricingRule` at that poin
 
 The game is deterministic: the same inputs always give the same game, so any difference in outcome comes from the manager's choices.
 
-**Happy Hour, measured.** We replayed `victory.txt` with Happy Hour declined at turn 14 and every other choice identical:
+**Happy Hour, measured.** `victory-no-happy-hour.txt` replays `victory.txt` with Happy Hour declined at turn 14 and every other choice identical:
 
 | Outcome | Happy Hour on (turn 14) | Declined |
 |---|---|---|
@@ -383,5 +383,5 @@ We kept the rule instead of adding a separate combo rule: it needs no new code o
 1. Display after arrivals: step 1 runs, then the display, so the manager sees the new arrival before choosing.
 2. Cashier order: the customer who became READY_TO_PAY first pays first. In Stage 1 at most one customer is ever READY_TO_PAY when the Cashier acts: the Waiter serves at most one order per turn, so no two customers finish eating on the same turn, and the Cashier pays every turn before new customers finish eating. The code therefore takes the first READY_TO_PAY customer in its order list, which is always that customer. If a later stage lets two customers be ready at once (e.g. two serves in one turn), `payOldestReadyCustomer()` must instead compare the turn each became ready, ties broken by lower customer id. Still true in Stage 3, the Host only seats customers, so the Waiter still serves at most one order per turn.
 3. When a customer leaves, any order not yet SERVED (IN_PREPARATION or READY) is cancelled. Customers with no order simply leave.
-4. Waiter menu: 1 Seat, 2 Take order, 3 Serve, 0 Wait. Seat picks from the queue, then a table (1 to 2). Take order picks from customers at tables. Serve and Chef Prepare pick from open orders (not PAID or CANCELLED). The controller decides whether the pick is allowed.Before the Waiter: Happy Hour 1 / 0, then Host 1 Seat / 0 Skip.
-5. Read-only access for the UI: rely on the "getters only" rule. No read-only interfaces in Stage 1.
+4. Waiter menu: 1 Seat, 2 Take order, 3 Serve, 0 Wait. Seat picks from the queue, then a table (1 to 2). Take order picks from customers at tables. Serve and Chef Prepare pick from open orders (not PAID or CANCELLED). The controller decides whether the pick is allowed. Before the Waiter: Happy Hour 1 / 0, then Host 1 Seat / 0 Skip.
+5. Read-only access for the UI: rely on the "getters only" rule. No read-only interfaces in any stage (see ISP above).
