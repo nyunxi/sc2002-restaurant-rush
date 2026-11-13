@@ -73,6 +73,93 @@ Useful for the design discussion. Each entry: the decision, why, and the alterna
 - **Rounding: once per discount.** Each discount is rounded to the nearest cent as it is applied (`Money.percentOff`), so a VIP order in Happy Hour is rounded twice. The brief does not say whether to round per step or once at the end; its $10.80 example comes out exact either way.
 - **Changes to earlier classes (brief 4.4).** `Waiter.takeOrder` gained a `HappyHour` parameter (the price must be fixed when the order is created). `Menu` adds the combos. `Customer` adds `recoverHappyHourSatisfaction()`. `GameController` adds the Host, Happy Hour and the turn-in-progress flag. `ConsoleUI` shows the menu and the two new prompts. `Order` gained a constructor that takes `HappyHour`. `Waiter.takeOrder`'s failure message now names the customer's state. No Stage 1 or 2 rule was rewritten.
 
+## Responsibilities and cohesion
+
+Each rule lives in one place:
+- Pricing: only in `Order`, `Money` and `HappyHour`.
+- Order transitions: only in `Order`.
+- Customer transitions: only in `Customer`.
+- The turn order: only in `GameController`.
+
+`ConsoleUI` decides nothing. For example, it asks `game.canActivateHappyHour()` instead of checking the rule itself. The staff classes enforce their own one-action-per-turn rule, so `GameController` only decides *when* they act, and they decide *whether* the action is allowed.
+
+## Design principles (only where the code shows them)
+
+- **SRP:**
+  - `Money` is the only class that formats or discounts cents.
+  - `Order` owns the bill, and `Cashier` only reads it (`getBillCents()`), so the price shown always equals the price charged.
+  - `ConsoleUI` has input and output only.
+- **OCP:**
+  - **Stage 3, the clearest case.** `ComboMeal` was added without editing `Order`, `Chef`, `Waiter`, `Cashier` or `Customer`, because they only call `getPriceCents()`, `getPrepUnits()` and `getName()`. The only change was registering the combos in `Menu`'s constructor. Customers pick combos up through their existing food-choice rule, because it indexes into whatever menu it is given.
+  - **Stage 2, less clean.** The waiting loss of 8 was written directly into `Customer`, so it first had to become an overridable `getWaitingLoss()`. Now that it is, a new customer type needs no change to `Customer`.
+- **LSP:**
+  - `GameController`, `Waiter` and `ConsoleUI` treat every customer as a `Customer`; there is no `instanceof` anywhere. VIP and Critic change values (5 or 12 instead of 8, 10% instead of 0%) but keep the contract: `chooseItem` still returns an item from the given menu.
+  - A `ComboMeal` can be used wherever a `MenuItem` is: the Chef prepares its 3 units and the Cashier charges its locked bill with no special case.
+- **ISP: not applied, deliberately.** There are no Java interfaces. We rejected read-only views such as `CustomerView` as extra types that change no behaviour (brief 4.4). The UI's access is narrowed in other ways:
+  - Lists are returned unmodifiable.
+  - Happy Hour is exposed only through queries (`isHappyHourActive()`, `getHappyHourTurnsRemaining()`, `isHappyHourUsed()`), never as the object itself.
+
+  The remaining weakness: `Customer` objects inside those lists still have public state-changing methods. Keeping the UI to getters only is a team convention, not something the compiler enforces.
+- **DIP: not applied.** `GameController` creates and depends on the concrete staff and `HappyHour` classes directly. With one implementation of each, an abstraction would add indirection with no benefit. See the alternative below for where it would pay off.
+
+## Trade-offs
+
+| Decision | Gained | Cost |
+|---|---|---|
+| Refused actions return `ActionResult`; only a bug throws `IllegalOrderStateException` | The UI just prints the reason and asks again; the exception is a safety net | Two failure channels; staff must convert the exception into a result |
+| One control class, `GameController` | The whole turn order is in one place, which made the sequence diagram and rule checks straightforward | It is the largest class (about 230 lines), and every Stage 2 and 3 feature added to it |
+| Bill locked in `Order`'s constructor | "Price fixed when the order is taken" holds automatically | `Waiter.takeOrder` had to gain a `HappyHour` parameter in Stage 3 |
+| Money as `int` cents, rounded after each discount | No floating-point errors in revenue; each step is testable | A VIP order during Happy Hour is rounded twice |
+| No staff superclass | Stage 1 `Waiter` unchanged; each role reads on its own | `Host` repeats about ten lines of the Waiter's seating check |
+| `Customer` stays concrete (it is the Regular customer) | No `RegularCustomer` class that adds no behaviour | A subclass that forgets an override silently inherits Regular behaviour |
+
+## Alternative design considered in depth: pricing rules behind an interface
+
+**Alternative.** Discounts would be objects behind a shared interface:
+
+```java
+interface PricingRule { int apply(int cents, Customer customer); }
+```
+
+- The VIP discount and Happy Hour would each be one implementation.
+- `GameController` would hold an ordered list of active rules.
+- `Order` would pass the price through each rule in turn.
+
+**What it would improve.**
+- **OCP and DIP:** `Order` would depend only on the abstraction, so a new promotion would be a new class with no edit to `Order` or `Waiter`.
+- **Discount order:** "VIP first, then Happy Hour" would be the order of the list rather than the order of lines in the constructor.
+
+**Why we did not adopt it.**
+- Only two rules exist, and the brief fixes their order, so nothing uses the flexibility.
+- It would move the VIP discount out of `VIPCustomer`, weakening the Stage 2 polymorphism shown by `getDiscountRate()`.
+- The brief says not to create interfaces just to satisfy a checklist.
+
+If a third promotion were added, we would refactor to `PricingRule` at that point.
+
+## How the player's choices change the result
+
+The game is deterministic: the same inputs always give the same game, so any difference in outcome comes from the manager's choices.
+
+**Happy Hour, measured.** We replayed `victory.txt` with Happy Hour declined at turn 14 and every other choice identical:
+
+| Outcome | Happy Hour on (turn 14) | Declined |
+|---|---|---|
+| Result | VICTORY | VICTORY |
+| Revenue | $59.40 | $62.10 |
+| Average satisfaction (paid) | **82.5** | **71.0** |
+| VIP: satisfaction at payment / Burger bill | 70 / $10.80 | 40 / $13.50 |
+| Critic (customer 4) | Still seated, satisfaction 22 | **Left** |
+
+- **Cost:** $2.70 of revenue.
+- **Gain:** 11.5 points of average satisfaction and one fewer unhappy departure. Three customers were waiting at turn 14, so all three got the +15.
+
+Switching it on is the better choice when revenue is safely above $45 but satisfaction is near 60. Because it is once per game, the turn you choose matters.
+
+**Staff constraints.**
+- **The Waiter has one task per turn and acts before the Chef.** Serving, taking an order and seating compete for that one task, and the Chef cannot cook an order that has not been taken.
+- **The Host seats one extra customer without using the Waiter's task.** In `victory.txt` on turn 13, the Host seats customer 5 and the Waiter takes their order in the same turn, saving a turn of waiting loss.
+- **Doing nothing loses.** In `defeat.txt` the staff wait every turn: 0 paid, $0.00, two unhappy departures.
+
 ## Enums
 
 ```
