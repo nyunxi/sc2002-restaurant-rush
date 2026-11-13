@@ -17,12 +17,13 @@ Who orders what (see the [food-choice rule](design-decisions.md#food-choice-rule
 | File | Result | What changed since Stage 2 |
 |---|---|---|
 | `victory.txt` | **VICTORY**: 4 paid, revenue $59.40, average satisfaction 82.5 | Re-planned so one run shows every Stage 3 feature: the Host seats customer 5 on turn 13, Happy Hour goes on at turn 14, the VIP pays $10.80 for a Burger, and a combo is paid for |
+| `victory-no-happy-hour.txt` | **VICTORY**: 4 paid, revenue $62.10, average satisfaction 71.0, 1 unhappy departure (the Critic, end of turn 18) | New, added after the `stage-3` tag. The same answers as `victory.txt`, except Happy Hour is declined at turn 14, and the Happy Hour question (which keeps appearing until it is used) is answered `0` on turns 15 to 18 |
 | `defeat.txt` | **DEFEAT**: 0 paid, $0.00, average N/A, 2 unhappy departures (customers 1 and 4) | Only `0`s added for the new questions. Same result as Stage 2 |
 | `happy.txt` | DEFEAT: 1 paid, $9.00, average 84.0 | Only `0`s added for the new questions. Same result as Stage 2 |
 | `rejects.txt` | Every invalid action is refused with a reason, and the task is not used up | Now also tries a bad Host move: on turn 4 the Host tries to seat customer 2 at Table 1, which is taken |
 | `failures.txt` | Bad input is re-asked every time, and the game never crashes | Now also types `5` at the Happy Hour question |
 
-The choices in `victory.txt` matter. If you replay it but leave Happy Hour off, you still win, but the VIP pays $13.50 instead of $10.80 and finishes at satisfaction 40 instead of 70. The average drops from 82.5 to 71.0.
+The choices in `victory.txt` matter. `victory-no-happy-hour.txt` replays it with Happy Hour declined at turn 14. You still win, but no one recovers satisfaction: the VIP pays $13.50 instead of $10.80 and finishes at 40 instead of 70, customer 5 finishes at 84 instead of 100, and the Critic, still waiting, reaches 0 and leaves at the end of turn 18. Revenue is $2.70 higher ($62.10), but the average drops from 82.5 to 71.0.
 
 ## Stage 3 rules checked
 
