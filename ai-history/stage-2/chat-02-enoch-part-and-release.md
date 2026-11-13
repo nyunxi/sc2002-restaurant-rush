@@ -783,120 +783,13 @@ The `out/` folder is in the repo root: check it's in `.gitignore` so compiled cl
 ---
 
 ## 11. Yunxi (prompt)  
-_2026-11-10 05:25 UTC_
-
-okay so given that it is a different file now, do i need to edit anything in stage 1 and what to put into stage 2
-
----
-
-## 12. Claude (reply)  
-_2026-11-10 05:26 UTC_
-
-**Tool call: `Bash`**
-
-```bash
-cd /home/claude/rr && awk '/Turn 1[2-4] of|Turn 1[7-8] of/{p=1} p&&/Turn|Customer 1 |Customer 4 |Unhappy|left|leaves/{print NR": "$0} /Turn 15 of/{p=0}' out_defeat.log | head -40; cat /home/claude/rr/tests/rejects.txt | head; cat ../rr/.gitignore 2>/dev/null
-```
-
-<details><summary>Tool output</summary>
-
-```text
-Exit code 1
-250: ========== Turn 12 of 18 ==========
-254:   Customer 1 (Regular) | satisfaction 12 | WAITING
-257:   Customer 4 (Critic) | satisfaction 76 | WAITING
-270: Served: 0 | Paid: 0 | Unhappy departures: 0
-272: Turns used: 12 of 18
-274: ========== Turn 13 of 18 ==========
-278:   Customer 1 (Regular) | satisfaction 4 | WAITING
-281:   Customer 4 (Critic) | satisfaction 64 | WAITING
-295: Served: 0 | Paid: 0 | Unhappy departures: 1
-297: Turns used: 13 of 18
-299: ========== Turn 14 of 18 ==========
-305:   Customer 4 (Critic) | satisfaction 52 | WAITING
-319: Served: 0 | Paid: 0 | Unhappy departures: 1
-321: Turns used: 14 of 18
-323: ========== Turn 15 of 18 ==========
-372: ========== Turn 17 of 18 ==========
-378:   Customer 4 (Critic) | satisfaction 16 | WAITING
-393: Served: 0 | Paid: 0 | Unhappy departures: 1
-395: Turns used: 17 of 18
-397: ========== Turn 18 of 18 ==========
-403:   Customer 4 (Critic) | satisfaction 4 | WAITING
-418: Served: 0 | Paid: 0 | Unhappy departures: 2
-420: Turns used: 18 of 18
-428:   Customer 1 (Regular) | satisfaction 0 | LEFT
-431:   Customer 4 (Critic) | satisfaction 0 | LEFT
-1
-1
-1
-0
-2
-1
-0
-3
-1
-0
-```
-
-</details>
-
-**Stage 1 file: don't change anything.** It records what Stage 1 did, and `git switch stage-1` still reproduces every number in it. Its "not yet covered" gap gets closed in the Stage 2 file.
-
-I checked the defeat timing in the log: customer 1 leaves at the end of turn 13, the Critic at the end of turn 18. The full Stage 2 file is below. Save it as `docs/test-notes-stage2.md`:
-
-````markdown
-# Test notes: Stage 2
-
-All runs use the required base setting (brief 2.1). Input files are in `tests/`, one answer per line, so every run is reproducible. Build and run:
-
-```
-javac --release 17 -d out src/restaurantrush/*.java
-java -cp out restaurantrush.Main < tests/victory.txt
-```
-
-Customer types: customer 2 is a VIP, customer 4 is a Critic, the rest are Regular.
-
-Food choice is deterministic. Regulars and VIPs order by arrival position (Salad, Burger, Pasta, repeating). The Critic always orders the most expensive item, Pasta. Result: 1 Salad, 2 Burger, 3 Pasta, 4 Pasta, 5 Burger, 6 Pasta.
-
-## Reproducible runs
-
-| File | Result | Change from Stage 1 |
-|---|---|---|
-| `victory.txt` | **VICTORY**: 5 paid, revenue $73.50, average satisfaction 75.6 | Inputs re-planned so the Critic is served before its satisfaction runs out. Revenue includes the VIP Burger at $13.50 |
-| `defeat.txt` | **DEFEAT**: 0 paid, $0.00, average N/A, 2 unhappy departures | Departures are now customers 1 (end of turn 13) and 4, the Critic (end of turn 18). The VIP, who left in Stage 1, now loses only 5 a turn and is still at 25 |
-| `happy.txt` | DEFEAT: 1 paid, $9.00 | Unchanged |
-| `rejects.txt` | Each invalid action refused with a reason; task not used up | Unchanged |
-| `failures.txt` | Re-prompts every time; no crash | Unchanged |
-
-## Rules checked against the brief
-
-| Rule | Where it shows |
-|---|---|
-| Satisfaction loss per turn: Regular 8, VIP 5, Critic 12 | `defeat.txt` final list: VIP at 25, Regular customer 5 at 52, Critic dropped from 64 to 52 between turns 13 and 14 |
-| VIP pays 10% less; price locked when the order is taken | `victory.txt`: Order #2 shows `$13.50 (menu $15.00)` from ordering through payment |
-| Critic orders the most expensive item | `victory.txt`: customer 4 orders Pasta ($18.00) |
-| Customer type shown on screen | Every customer line shows `(Regular)`, `(VIP)` or `(Critic)` |
-| Customer at 0 leaves from a table; order cancelled, table freed (gap in Stage 1 notes) | `rejects.txt`: customer 1 ends `LEFT`, Salad 0/1 `Cancelled` |
-| Customer behaviour chosen by overriding, not type checks | `grep -n instanceof src/restaurantrush/*.java` prints nothing |
-````
-
-Before you commit, check two things:
-- **Brief wording.** I wrote the VIP and Critic rules from your code, not from the brief. Match each row to the brief's section numbers the way the Stage 1 table does (e.g. "(brief 2.3)").
-- **`rejects.txt` row.** Run it once yourself and confirm customer 1 was sitting at a table when they left, not in the queue. The final list shows a cancelled order, which suggests they were seated, but confirm it.
-
-Then add the README links and open the PR.
-
----
-
-## 13. Yunxi (prompt)  
 _2026-11-10 05:29 UTC_
 
 help me match it
 
 ---
 
-## 14. Claude (reply)  
+## 12. Claude (reply)  
 _2026-11-10 05:30 UTC_
 
 **Tool call: `mcp__remote-devices__device_bash`**
@@ -1100,7 +993,7 @@ I could match everything except the numbers. One row was wrong: the Critic's dis
 
 ---
 
-## 15. Yunxi (prompt)  
+## 13. Yunxi (prompt)  
 _2026-11-10 05:39 UTC_
 
 Attached: `SC2002_Restaurant_Rush_Group_Assignment-2.docx`, `SC2002_Group_Project_Briefing.pdf`
@@ -1111,7 +1004,7 @@ _[document attached]_
 
 ---
 
-## 16. Claude (reply)  
+## 15. Claude (reply)  
 _2026-11-10 05:40 UTC_
 
 **Tool call: `Bash`**
@@ -1278,14 +1171,14 @@ What changed from the draft:
 
 ---
 
-## 17. Yunxi (prompt)  
+## 15. Yunxi (prompt)  
 _2026-11-10 05:42 UTC_
 
 okay now that ive updated the test notes do i commit it
 
 ---
 
-## 18. Claude (reply)  
+## 16. Claude (reply)  
 _2026-11-10 05:42 UTC_
 
 **Tool call: `mcp__remote-devices__device_bash`**
@@ -1384,14 +1277,14 @@ What each step does:
 
 ---
 
-## 19. Yunxi (prompt)  
+## 17. Yunxi (prompt)  
 _2026-11-10 05:44 UTC_
 
 what and wherre is number 2 and do i not need to change anything else in the readme
 
 ---
 
-## 20. Claude (reply)  
+## 18. Claude (reply)  
 _2026-11-10 05:44 UTC_
 
 **Tool call: `mcp__remote-devices__device_bash`**
@@ -1501,14 +1394,14 @@ Every line it prints should have a row in the table, and the table shouldn't lis
 
 ---
 
-## 21. Yunxi (prompt)  
+## 19. Yunxi (prompt)  
 _2026-11-10 05:46 UTC_
 
 but for the link in line 12 it can only be added after i tag everything right
 
 ---
 
-## 22. Claude (reply)  
+## 20. Claude (reply)  
 _2026-11-10 05:46 UTC_
 
 No, add it now. The link will show "404" until the tag exists, and that's fine.
@@ -1528,14 +1421,14 @@ The same goes for the compare link in the new "Stage 1 → Stage 2 changes" sect
 
 ---
 
-## 23. Yunxi (prompt)  
+## 21. Yunxi (prompt)  
 _2026-11-10 05:54 UTC_
 
 okayy so now what to do after i edited the readme
 
 ---
 
-## 24. Claude (reply)  
+## 22. Claude (reply)  
 _2026-11-10 05:54 UTC_
 
 **Tool call: `mcp__remote-devices__device_bash`**
@@ -1663,7 +1556,7 @@ Don't tag until the PR is merged and you've pulled. A tag on your old local `mai
 
 ---
 
-## 25. Yunxi (prompt)  
+## 23. Yunxi (prompt)  
 _2026-11-10 05:56 UTC_
 
 Attached: `Screenshot 2026-11-10 at 1.55.20PM.png`
@@ -1674,7 +1567,7 @@ are you seeing a different thing in line 49
 
 ---
 
-## 26. Claude (reply)  
+## 24. Claude (reply)  
 _2026-11-10 05:56 UTC_
 
 No, I'm seeing the same line. The problem is the wording, not a typo.
@@ -1694,7 +1587,7 @@ The second one is harder to misread. It also matches how the code calculates it:
 
 ---
 
-## 27. Yunxi (prompt)  
+## 25. Yunxi (prompt)  
 _2026-11-10 05:58 UTC_
 
 Attached: `Screenshot 2026-11-10 at 1.58.35PM.png`
@@ -1705,7 +1598,7 @@ i got stuck at the gitadd is it because i already renamed it just now
 
 ---
 
-## 28. Claude (reply)  
+## 26. Claude (reply)  
 _2026-11-10 05:58 UTC_
 
 Yes. The rename is already staged: earlier, `git status` showed `R docs/test-notes.md -> docs/test-notes-stage1.md`. So Git has already recorded that the old file is gone. When you name a path in `git add`, Git looks for that file on disk or for an unstaged change to it. `docs/test-notes.md` has neither, so Git stops with an error.
@@ -1736,7 +1629,7 @@ git push -u origin stage2-release-notes
 
 ---
 
-## 29. Yunxi (prompt)  
+## 27. Yunxi (prompt)  
 _2026-11-10 06:04 UTC_
 
 Attached: `Screenshot 2026-11-10 at 2.03.57PM.png`, `Screenshot 2026-11-10 at 2.04.03PM.png`, `Screenshot 2026-11-10 at 2.04.09PM.png`, `Screenshot 2026-11-10 at 2.04.17PM.png`
@@ -1753,7 +1646,7 @@ here are the feedback received i think 2 and 4 can be ignored what is 1 about
 
 ---
 
-## 30. Claude (reply)  
+## 28. Claude (reply)  
 _2026-11-10 06:04 UTC_
 
 **Tool call: `Bash`**
@@ -1805,7 +1698,7 @@ After that: merge, `git switch main`, `git pull`, and tag `stage-2`.
 
 ---
 
-## 31. Yunxi (prompt)  
+## 29. Yunxi (prompt)  
 _2026-11-10 06:10 UTC_
 
 Attached: `Screenshot 2026-11-10 at 2.10.46PM.png`
@@ -1816,7 +1709,7 @@ what happen here
 
 ---
 
-## 32. Claude (reply)  
+## 30. Claude (reply)  
 _2026-11-10 06:11 UTC_
 
 **Tool call: `mcp__remote-devices__device_bash`**
@@ -1863,7 +1756,7 @@ Then on GitHub, click the `stage-2` link in the README's Stages table and the co
 
 ---
 
-## 33. Yunxi (prompt)  
+## 31. Yunxi (prompt)  
 _2026-11-10 06:12 UTC_
 
 Attached: `Screenshot 2026-11-10 at 2.12.09PM.png`
@@ -1874,7 +1767,7 @@ so stage 2 is done
 
 ---
 
-## 34. Claude (reply)  
+## 32. Claude (reply)  
 _2026-11-10 06:12 UTC_
 
 **Tool call: `mcp__remote-devices__device_bash`**
@@ -1914,14 +1807,14 @@ Next up is Stage 3: Host, ComboMeal and Happy Hour, due Sunday 15 November, 11:5
 
 ---
 
-## 35. Yunxi (prompt)  
+## 33. Yunxi (prompt)  
 _2026-11-10 06:13 UTC_
 
 okayy so its done
 
 ---
 
-## 36. Claude (reply)  
+## 34. Claude (reply)  
 _2026-11-10 06:13 UTC_
 
 Yes, Stage 2 is tagged and released. The only thing left is opening the two links on GitHub, which takes a few seconds.
@@ -1935,14 +1828,14 @@ Send me what the group decides and we'll work out your CLI and test parts from t
 
 ---
 
-## 37. Yunxi (prompt)  
+## 35. Yunxi (prompt)  
 _2026-11-10 06:13 UTC_
 
 i opened it it works
 
 ---
 
-## 38. Claude (reply)  
+## 36. Claude (reply)  
 _2026-11-10 06:13 UTC_
 
 Then Stage 2 is complete: tagged, links working, and every release check passed.
@@ -1951,14 +1844,14 @@ When the group has agreed the Stage 3 design, send it over and we'll plan your C
 
 ---
 
-## 39. Yunxi (prompt)  
+## 37. Yunxi (prompt)  
 _2026-11-10 06:19 UTC_
 
 okayy so now that nothing in stage 3 has been made, can i do anything?
 
 ---
 
-## 40. Claude (reply)  
+## 38. Claude (reply)  
 _2026-11-10 06:20 UTC_
 
 **Tool call: `Bash`**
@@ -2046,7 +1939,7 @@ Want to start with the Stage 3 design questions so you can take a proposal to th
 
 ---
 
-## 41. Yunxi (prompt)  
+## 39. Yunxi (prompt)  
 _2026-11-10 06:21 UTC_
 
 Attached: `excerpt_from_previous_claude_message.txt`, `excerpt_from_previous_claude_message.txt`
@@ -2057,7 +1950,7 @@ HAAHAHAHHA why do you suggest this
 
 ---
 
-## 42. Claude (reply)  
+## 40. Claude (reply)  
 _2026-11-10 06:21 UTC_
 
 Fair. You already wrote Rajvi's Stage 2 `GameController` change for him, so "offer to help" is generous.
@@ -2073,14 +1966,14 @@ Whoever ends up drawing it, you'll need to be able to explain it in the video. S
 
 ---
 
-## 43. Yunxi (prompt)  
+## 41. Yunxi (prompt)  
 _2026-11-10 06:28 UTC_
 
 okay ill do stage 3 and the ai declaration tonight, also what exactly is a sequence diagram and what is the best way to make it, should i do it on puml also
 
 ---
 
-## 44. Claude (reply)  
+## 42. Claude (reply)  
 _2026-11-10 06:29 UTC_
 
 **Tool call: `Bash`**

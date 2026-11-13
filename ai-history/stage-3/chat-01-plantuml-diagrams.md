@@ -1350,294 +1350,6 @@ ComboMeal -up-|> MenuItem
 ---
 
 ## 11. Yunxi (prompt)  
-_2026-11-11 12:40 UTC_
-
-give me the full relationships and dependencies
-
----
-
-## 12. Claude (reply)  
-_2026-11-11 12:40 UTC_
-
----
-
-## 13. Yunxi (prompt)  
-_2026-11-11 12:40 UTC_
-
-```plantuml
-GameController "1" *-- "2" Table : tables
-GameController "1" *-- "1" Waiter : waiter
-GameController "1" *-- "1" Chef : chef
-GameController "1" *-- "1" Cashier : cashier
-GameController "1" *-- "0..6" Customer : customers
-GameController "1" *-- "1" Host : host
-GameController "1" *-- "1" HappyHour : happyHour
-Menu "1" *-- "5" MenuItem : items
-
-GameController "0..1" --> "*" Customer : queue
-GameController "1" --> "*" Order : orders
-GameController --> "1..*" MenuItem : menu
-ComboMeal --|> MenuItem
-ComboMeal "*" o-- "2" MenuItem : first, second
-Order ..> HappyHour
-Order "*" --> "1" MenuItem : item
-Waiter ..> HappyHour
-Host ..> Customer
-Host ..> Table
-Host ..> ActionResult : <<create>>
-HappyHour ..> Money
-ComboMeal ..> Money
-Customer ..> HappyHour
-Table "0..1" --> "0..1" Customer : customer
-ConsoleUI "1" --> "1" GameController : game
-ConsoleUI "1" --> "1" InputReader : input
-
-Customer "1" -- "0..1" Order : order / customer
-
-IllegalOrderStateException --|> IllegalStateException
-IllegalStateException --|> RuntimeException
-GameQuitException --|> RuntimeException
-VIPCustomer --|> Customer
-CriticCustomer --|> Customer
-
-Main .[#999999].> Menu : <<create>>
-Main .[#999999].> GameController : <<create>>
-Main .[#999999].> InputReader : <<create>>
-Main .[#999999].> ConsoleUI : <<create>>
-Main .[#999999].> GameQuitException : catches
-
-Waiter .[#999999].> Order : <<create>>
-Waiter .[#999999].> Customer
-Waiter .[#999999].> Table
-Chef .[#999999].> Order
-Cashier .[#999999].> Order
-Cashier .[#999999].> Table
-Customer .[#999999].> MenuItem : chooses
-
-Waiter .[#999999].> ActionResult : <<create>>
-Chef .[#999999].> ActionResult : <<create>>
-Cashier .[#999999].> ActionResult : <<create>>
-Table .[#999999].> ActionResult : <<create>>
-GameController .[#999999].> ActionResult : <<create>>
-GameController .[#999999].> VIPCustomer : <<create>>
-GameController .[#999999].> CriticCustomer : <<create>>
-ConsoleUI .[#999999].> ActionResult
-
-InputReader .[#999999].> GameQuitException : <<throws>>
-Order .[#999999].> IllegalOrderStateException : <<throws>>
-
-MenuItem .[#999999].> Money
-Order .[#999999].> Money
-ConsoleUI .[#999999].> Money
-```
-
----
-
-## 14. Claude (reply)  
-_2026-11-11 12:40 UTC_
-
-Here's the full block. Paste it over everything from the first relationship line down to just before the first `note`. I added 10 lines; each one has a `' Stage 3` comment above it.
-
-```plantuml
-' ---------- Composition ----------
-GameController "1" *-- "2" Table : tables
-GameController "1" *-- "1" Waiter : waiter
-GameController "1" *-- "1" Chef : chef
-GameController "1" *-- "1" Cashier : cashier
-GameController "1" *-- "0..6" Customer : customers
-' Stage 3
-GameController "1" *-- "1" Host : host
-GameController "1" *-- "1" HappyHour : happyHour
-Menu "1" *-- "5" MenuItem : items
-
-' ---------- Aggregation ----------
-' Stage 3
-ComboMeal "*" o-- "2" MenuItem : first, second
-
-' ---------- Association ----------
-GameController "0..1" --> "*" Customer : queue
-GameController "1" --> "*" Order : orders
-GameController --> "1..*" MenuItem : menu
-Order "*" --> "1" MenuItem : item
-Table "0..1" --> "0..1" Customer : customer
-ConsoleUI "1" --> "1" GameController : game
-ConsoleUI "1" --> "1" InputReader : input
-Customer "1" -- "0..1" Order : order / customer
-
-' ---------- Inheritance ----------
-IllegalOrderStateException --|> IllegalStateException
-IllegalStateException --|> RuntimeException
-GameQuitException --|> RuntimeException
-VIPCustomer --|> Customer
-CriticCustomer --|> Customer
-' Stage 3
-ComboMeal --|> MenuItem
-
-' ---------- Dependencies ----------
-Main .[#999999].> Menu : <<create>>
-Main .[#999999].> GameController : <<create>>
-Main .[#999999].> InputReader : <<create>>
-Main .[#999999].> ConsoleUI : <<create>>
-Main .[#999999].> GameQuitException : catches
-
-Waiter .[#999999].> Order : <<create>>
-Waiter .[#999999].> Customer
-Waiter .[#999999].> Table
-Chef .[#999999].> Order
-Cashier .[#999999].> Order
-Cashier .[#999999].> Table
-Customer .[#999999].> MenuItem : chooses
-' Stage 3
-Host .[#999999].> Customer
-Host .[#999999].> Table
-Waiter .[#999999].> HappyHour
-Order .[#999999].> HappyHour
-Customer .[#999999].> HappyHour
-Menu .[#999999].> ComboMeal : <<create>>
-
-Waiter .[#999999].> ActionResult : <<create>>
-Chef .[#999999].> ActionResult : <<create>>
-Cashier .[#999999].> ActionResult : <<create>>
-Table .[#999999].> ActionResult : <<create>>
-GameController .[#999999].> ActionResult : <<create>>
-GameController .[#999999].> VIPCustomer : <<create>>
-GameController .[#999999].> CriticCustomer : <<create>>
-ConsoleUI .[#999999].> ActionResult
-' Stage 3
-Host .[#999999].> ActionResult : <<create>>
-
-InputReader .[#999999].> GameQuitException : <<throws>>
-Order .[#999999].> IllegalOrderStateException : <<throws>>
-' Stage 3
-HappyHour .[#999999].> IllegalStateException : <<throws>>
-
-MenuItem .[#999999].> Money
-Order .[#999999].> Money
-ConsoleUI .[#999999].> Money
-' Stage 3
-HappyHour .[#999999].> Money
-ComboMeal .[#999999].> Money
-```
-
-**Two lines I added that weren't in my earlier list:**
-- `Menu ..> ComboMeal : <<create>>`: `Menu()` creates the combos with `new ComboMeal(...)`. The composition arrow only says "Menu owns MenuItems", so this line names the subclass it creates. It follows the same pattern as `GameController ..> VIPCustomer : <<create>>`.
-- `HappyHour ..> IllegalStateException : <<throws>>`: `activate()` throws it when Happy Hour has already been used. It follows the same pattern as `Order ..> IllegalOrderStateException`.
-
-**About the `'` lines:** in PlantUML, `'` starts a comment, so the section headers and `' Stage 3` markers don't appear in the image. You can delete them if you prefer, but the Stage 3 markers help Rajvi see what changed when she reviews.
-
----
-
-## 15. Yunxi (prompt)  
-_2026-11-11 12:46 UTC_
-
-give me the edited notes
-
----
-
-## 16. Claude (reply)  
-_2026-11-11 12:46 UTC_
-
-These replace every `note` and the `legend` from the Stage 2 file, so paste the whole block over them. The ones marked `' Stage 3` are new; the rest are Stage 2 notes with edits.
-
-```plantuml
-note right of Customer
-  <b>Encapsulation</b>
-  State changes only through seat(), placeOrder(),
-  markServed(), finishEating(), markPaid(), leave().
-  Each checks the current state first via private
-  requireState(), so no class can skip a step
-  (e.g. WAITING straight to PAID).
-  recoverHappyHourSatisfaction() changes satisfaction
-  only, never state, and is capped at 100.
-end note
-
-note bottom of VIPCustomer
-  <b>Polymorphism (inheritance + overriding)</b>
-  VIP and Critic override getWaitingLoss(),
-  getDiscountRate(), getCustomerType(), chooseItem().
-  GameController and ConsoleUI only call Customer
-  methods; there is no instanceof anywhere.
-  Critic's "most expensive item" now includes combos
-  with no change to its code.
-end note
-
-note bottom of Order
-  <b>Encapsulation</b>
-  billCents is final: the price is locked when
-  the order is taken. Customer discount first,
-  then Happy Hour 20% off if active
-  (VIP Burger: $15.00 -> $13.50 -> $10.80).
-  HappyHour is only read in the constructor,
-  so it is a dependency, not a field.
-  Status changes are guarded by requireStatus().
-end note
-
-note left of GameController
-  <b>Composition</b>
-  Creates and owns the 2 Tables, the staff
-  (Host, Waiter, Chef, Cashier), the HappyHour
-  and every Customer for the whole game.
-  <b>Single creation point</b>
-  createCustomer() is the only place that names
-  the Customer subclasses (customer 2 VIP, 4 Critic).
-  <b>Encapsulation</b>
-  getQueue(), getTables(), getOrders(), getCustomers()
-  return unmodifiable lists; getMenu() returns a copy.
-  turnInProgress and waiterDone limit Happy Hour
-  to the start of a turn.
-end note
-
-note right of MenuItem
-  <b>Polymorphism</b>
-  MenuItem, ComboMeal and Order override
-  Object.toString().
-  Staff catch IllegalOrderStateException; Main
-  catches GameQuitException (both RuntimeException
-  subtypes).
-end note
-
-' Stage 3
-note bottom of ComboMeal
-  <b>Inheritance + aggregation</b>
-  A ComboMeal is a MenuItem made of 2 MenuItems,
-  so Customer, Order and Chef handle it like any
-  dish. Price (90% of both) and prep units (sum)
-  are fixed in the constructor.
-  The same Salad object is shared by Menu and
-  both combos, hence aggregation, not composition.
-end note
-
-' Stage 3
-note right of HappyHour
-  <b>Encapsulation</b>
-  Once per game: activate() throws if already used.
-  Lasts 2 turns; endTurn() counts down.
-  applyTo() is the only place the 20% is applied.
-end note
-
-' Stage 3
-note right of Host
-  <b>Single responsibility</b>
-  Seats at most 1 customer per turn and does not
-  use the Waiter's task. A separate class, not a
-  Staff superclass (see design discussion).
-end note
-
-legend top left
-  Stage 3 class diagram
-  New in Stage 3: Host, HappyHour, ComboMeal.
-  Simple getters and unused status checks omitted.
-  ConsoleUI picking and formatting helpers omitted.
-endlegend
-```
-
-Before committing, check two things:
-- **"No instanceof anywhere"**: I checked this against the Stage 3 source earlier today. If anyone adds code after this, run `grep -rn instanceof src/` again before you tag.
-- **Note positions:** five notes now sit around `GameController`, `Customer` and `MenuItem`, so they may overlap when rendered. If they do, change `right` or `bottom` to another side, such as `note top of HappyHour`. That changes only where the note is drawn.
-
----
-
-## 17. Yunxi (prompt)  
 _2026-11-11 12:47 UTC_
 
 _[document attached]_
@@ -1646,7 +1358,7 @@ check the entire puml
 
 ---
 
-## 18. Claude (reply)  
+## 12. Claude (reply)  
 _2026-11-11 12:48 UTC_
 
 **Tool call: `Bash`**
@@ -1810,7 +1522,7 @@ I couldn't render the diagram here, so render it yourself after the fixes (`plan
 
 ---
 
-## 19. Yunxi (prompt)  
+## 13. Yunxi (prompt)  
 _2026-11-11 12:52 UTC_
 
 _[document attached]_
@@ -1819,7 +1531,7 @@ check again
 
 ---
 
-## 20. Claude (reply)  
+## 14. Claude (reply)  
 _2026-11-11 12:52 UTC_
 
 It's correct, and all three fixes are in:
@@ -1842,14 +1554,14 @@ After that, the sequence diagram is next. Its method names must match this file 
 
 ---
 
-## 21. Yunxi (prompt)  
+## 15. Yunxi (prompt)  
 _2026-11-11 12:53 UTC_
 
 what is the code for git push
 
 ---
 
-## 22. Claude (reply)  
+## 16. Claude (reply)  
 _2026-11-11 12:53 UTC_
 
 You're on the new `stage3-diagrams` branch, so the first push needs `-u`:
@@ -1868,7 +1580,7 @@ If it says `Everything up-to-date`, you haven't committed yet. Run the `git add`
 
 ---
 
-## 23. Yunxi (prompt)  
+## 17. Yunxi (prompt)  
 _2026-11-11 12:54 UTC_
 
 Attached: `excerpt_from_previous_claude_message.txt`, `excerpt_from_previous_claude_message.txt`
@@ -1879,7 +1591,7 @@ so this sequence diagram is only needed for stage 3?
 
 ---
 
-## 24. Claude (reply)  
+## 18. Claude (reply)  
 _2026-11-11 12:54 UTC_
 
 **Tool call: `mcp__claude_ai__conversation_search`**
@@ -1935,14 +1647,14 @@ Read the exact sentence in section 5. If it says win or loss, tell me, and I'll 
 
 ---
 
-## 25. Yunxi (prompt)  
+## 19. Yunxi (prompt)  
 _2026-11-11 13:37 UTC_
 
 okay i need to extract the puml
 
 ---
 
-## 26. Claude (reply)  
+## 20. Claude (reply)  
 _2026-11-11 13:38 UTC_
 
 If "extract" means exporting the `.puml` file as images (the same `.png` and `.svg` files Stages 1 and 2 have), here are three ways.
@@ -1988,14 +1700,14 @@ If you meant something else, like the full code for `stage-3-sequence.puml` inst
 
 ---
 
-## 27. Yunxi (prompt)  
+## 21. Yunxi (prompt)  
 _2026-11-11 13:42 UTC_
 
 guide me on how the sequence diagram should go
 
 ---
 
-## 28. Claude (reply)  
+## 22. Claude (reply)  
 _2026-11-11 13:43 UTC_
 
 Below is the full structure from top to bottom, with the fixes from my last message (arrival on turn 4, and the turn loop) included. Every message is a real method from the Stage 3 code, and every number comes from the `victory.txt` run.
@@ -2261,14 +1973,14 @@ The final note is the evidence for "the choice changes the outcome". Happy Hour 
 
 ---
 
-## 29. Yunxi (prompt)  
+## 23. Yunxi (prompt)  
 _2026-11-11 13:44 UTC_
 
 how to create and what is the purpose of this sequence diagram
 
 ---
 
-## 30. Claude (reply)  
+## 24. Claude (reply)  
 _2026-11-11 13:45 UTC_
 
 ## Purpose
@@ -2327,7 +2039,7 @@ It's worth 20 marks in your work plan, and the markers check it against the code
 
 ---
 
-## 31. Yunxi (prompt)  
+## 25. Yunxi (prompt)  
 _2026-11-11 13:47 UTC_
 
 Attached: `Screenshot 2026-11-11 at 9.47.31PM.png`
@@ -2336,7 +2048,7 @@ _[image attached]_
 
 ---
 
-## 32. Claude (reply)  
+## 26. Claude (reply)  
 _2026-11-11 13:47 UTC_
 
 The file was created; `touch` worked. Only the `code` shortcut failed: VS Code is installed, but its terminal command isn't. Your class diagram push also went through, since `stage3-diagrams` is now on GitHub.
@@ -2352,7 +2064,7 @@ Then paste section 1 of the guide into the file, press **Option + D** to preview
 
 ---
 
-## 33. Yunxi (prompt)  
+## 27. Yunxi (prompt)  
 _2026-11-11 14:04 UTC_
 
 Attached: `excerpt_from_previous_claude_message.txt`, `excerpt_from_previous_claude_message.txt`
@@ -2363,7 +2075,7 @@ help me understand it why is turn 4 the VIP arrive, so that means only at turn 4
 
 ---
 
-## 34. Claude (reply)  
+## 28. Claude (reply)  
 _2026-11-11 14:04 UTC_
 
 ## 1. Why the VIP arrives on turn 4
@@ -2425,7 +2137,7 @@ That pattern is the boundary, control and entity split. Once you notice it, ever
 
 ---
 
-## 35. Yunxi (prompt)  
+## 29. Yunxi (prompt)  
 _2026-11-11 14:06 UTC_
 
 Attached: `Screenshot 2026-11-11 at 10.06.33PM.png`
@@ -2434,7 +2146,7 @@ _[image attached]_
 
 ---
 
-## 36. Claude (reply)  
+## 30. Claude (reply)  
 _2026-11-11 14:06 UTC_
 
 This confirms the scenario works. The brief says a choice changes **"an outcome"**, not "the result". The VIP's bill ($10.80 vs $13.50) and their satisfaction when paying (70 vs 40) are both outcomes, so the win-vs-loss question from earlier is settled and you can keep the scenario.
@@ -2480,14 +2192,14 @@ PlantUML prints the text as you write it, so the brackets will show in the rende
 
 ---
 
-## 37. Yunxi (prompt)  
+## 31. Yunxi (prompt)  
 _2026-11-11 14:07 UTC_
 
 so you made sure that you covered all grounds already right
 
 ---
 
-## 38. Claude (reply)  
+## 32. Claude (reply)  
 _2026-11-11 14:07 UTC_
 
 I covered every item in the brief's sequence diagram row, but there are two things I haven't been able to verify.
@@ -2506,288 +2218,7 @@ So the content is right. When you've built the file, render it and send it to me
 
 ---
 
-## 39. Yunxi (prompt)  
-_2026-11-11 14:10 UTC_
-
-okayy give me the clearer code for the sequence diagram again
-
----
-
-## 40. Claude (reply)  
-_2026-11-11 14:11 UTC_
-
-Attached: `stage-3-sequence.puml`, `stage-3-sequence.puml`
-
-**Tool call: `Write`**
-
-File: `/mnt/user-data/outputs/stage-3-sequence.puml`
-
-```
-@startuml
-hide footbox
-autonumber
-title Stage 3 sequence diagram: the VIP's order, with and without Happy Hour (tests/victory.txt)
-
-' ============================================================
-' PARTICIPANTS
-' vip and order are NOT declared here: they are created
-' partway down the page (turn 4 and turn 14).
-' ============================================================
-actor Player
-participant "ui : ConsoleUI" as ui
-participant "game : GameController" as game
-participant "hh : HappyHour" as hh
-participant "waiter : Waiter" as waiter
-participant "chef : Chef" as chef
-participant "cashier : Cashier" as cashier
-participant "t2 : Table" as t2
-participant Money <<utility>>
-
-' ============================================================
-' THE TURN LOOP (ConsoleUI.run)
-' ============================================================
-loop [!isGameOver(), turns 1..18]
-
-  ' ----------------------------------------------------------
-  == Turns 1 to 3 ==
-  note over ui, game : Customer 1 arrives on turn 1 (not shown)
-
-  ' ----------------------------------------------------------
-  == Turn 4: the VIP arrives and is seated ==
-  ui -> game ++ : startTurn()
-  game -> game : createCustomer(2)
-  create participant "vip : VIPCustomer" as vip
-  game -> vip : <<create>> VIPCustomer(2)
-  note right of game
-    ARRIVAL_TURNS: one customer on turns 1, 4, 7, 10, 13, 16.
-    Id 2 -> VIPCustomer. Only place a subclass is named.
-    vip joins the waiting queue.
-  end note
-  return
-
-  note over Player, ui : Happy Hour answered 0 (No). Host seats no one.
-
-  Player -> ui : 1 (Waiter: seat)
-  ui -> game ++ : waiterSeat(vip, t2)
-  game -> waiter ++ : seat(vip, t2)
-  waiter -> t2 ++ : seat(vip)
-  return ok
-  waiter -> vip : seat()
-  note right of vip : WAITING -> SEATED
-  return ok
-  return ok
-
-  ui -> game ++ : endTurn()
-  game -> vip : loseWaitingSatisfaction()
-  note right of vip : satisfaction 100 -> 95
-  return
-
-  ' ----------------------------------------------------------
-  ...
-  == Turns 5 to 13 ==
-  note over vip : SEATED and waiting. Loses 5 per turn (95 -> 50).
-  ...
-
-  ' ----------------------------------------------------------
-  == Turn 14: the manager's choice (Happy Hour) ==
-  ui -> game : startTurn()
-
-  ui -> game ++ : canActivateHappyHour()
-  game -> hh ++ : canActivate()
-  return true
-  return true
-
-  opt [Player answers 1 (Yes)]
-    Player -> ui : 1
-    ui -> game ++ : activateHappyHour()
-    game -> hh : activate()
-    note right of hh : used = true, 2 turns left
-    loop [for each customer]
-      game -> vip : recoverHappyHourSatisfaction()
-    end
-    note right of vip : satisfaction 50 -> 65
-    return ok
-  end
-
-  ui -> game ++ : canHostSeat()
-  return false
-  note right of game : both tables full, Host skipped
-
-  Player -> ui : 2 (Waiter: take order)
-  ui -> game ++ : waiterTakeOrder(vip)
-  game -> waiter ++ : takeOrder(vip, menu, orders, hh)
-
-  waiter -> vip ++ : chooseItem(menu)
-  return Burger
-  note right of vip : inherited from Customer:\nmenu[(2 - 1) % 5] = Burger ($15.00)
-
-  create participant "order : Order" as order
-  waiter -> order ++ : <<create>> Order(vip, Burger, hh)
-
-  order -> vip ++ : getDiscountRate()
-  return 0.10
-  note right of vip : VIPCustomer override (polymorphism)
-
-  order -> Money ++ : applyDiscountRate(1500, 0.10)
-  return 1350
-
-  order -> hh ++ : isActive()
-  return
-
-  alt [hh.isActive()]
-    order -> hh ++ : applyTo(1350)
-    hh -> Money ++ : percentOff(1350, 20)
-    return 1080
-    return 1080
-    note right of order : billCents = 1080 ($10.80), locked
-  else [else]
-    note right of order : billCents = 1350 ($13.50), locked
-  end
-  return order
-
-  waiter -> vip : placeOrder(order)
-  note right of vip : SEATED -> ORDERED
-  return ok
-  return ok
-
-  note over chef : Chef works on Customer 5's combo (not shown)
-
-  ui -> game ++ : endTurn()
-  game -> vip : loseWaitingSatisfaction()
-  game -> hh : endTurn()
-  note right of hh : 2 -> 1 turn left
-  return
-
-  ' ----------------------------------------------------------
-  == Turn 15: the Chef prepares ==
-  ui -> game ++ : startTurn()
-  game -> hh ++ : isActive()
-  return true
-  loop [for each customer]
-    game -> vip : recoverHappyHourSatisfaction()
-  end
-  note right of vip : satisfaction 60 -> 75
-  return
-
-  note over waiter : Waiter acts first (the Chef is blocked until waiterDone)
-
-  Player -> ui : 1 (Chef: prepare)
-  ui -> game ++ : chefPrepare(order)
-  game -> chef ++ : prepare(order)
-  chef -> order ++ : canAdvance()
-  return true
-  chef -> order ++ : advanceOneUnit()
-  note right of order : 1/1 units: IN_PREPARATION -> READY
-  return true
-  return ok
-  return ok
-
-  ui -> game ++ : endTurn()
-  game -> vip : loseWaitingSatisfaction()
-  game -> hh : endTurn()
-  note right of hh : 1 -> 0, Happy Hour over
-  return
-
-  ' ----------------------------------------------------------
-  == Turn 16: the Waiter serves ==
-  Player -> ui : 3 (Waiter: serve)
-  ui -> game ++ : waiterServe(order)
-  game -> waiter ++ : serve(order)
-  waiter -> order ++ : isReady()
-  return true
-  waiter -> order : markServed()
-  note right of order : READY -> SERVED
-  waiter -> vip : markServed()
-  note right of vip : ORDERED -> EATING (satisfaction 70)
-  return ok
-  note right of game : servedOnTurn.put(order, 16)
-  return ok
-
-  ' ----------------------------------------------------------
-  == Turn 17: the VIP eats ==
-  ui -> game ++ : endTurn()
-  note right of game : payOldestReadyCustomer() pays Customer 5 first\n(only 1 payment per turn)
-  game -> vip : finishEating()
-  note right of vip : EATING -> READY_TO_PAY\n(served on turn 16 < 17)
-  return
-
-  ' ----------------------------------------------------------
-  == Turn 18: the VIP pays ==
-  ui -> game ++ : endTurn()
-  game -> cashier ++ : processPayment(order, t2)
-  cashier -> order : markPaid()
-  cashier -> vip : markPaid()
-  cashier -> t2 : free()
-  cashier -> order ++ : getBillCents()
-  return 1080
-  note right of cashier : revenue += 1080\nsatisfaction 70 recorded
-  return ok
-  return
-
-end
-
-' ============================================================
-' RESULT CHECK (ConsoleUI.showFinalResult)
-' ============================================================
-ui -> game ++ : isVictory()
-game -> cashier : getPaidCount()
-game -> cashier : getRevenueCents()
-game -> cashier : getAverageSatisfaction()
-return true
-
-note over ui, cashier
-  <b>How the manager's choice changes the outcome</b>
-  With Happy Hour:    VIP pays $10.80 at satisfaction 70. Final: $59.40, average 82.5, VICTORY.
-  Without Happy Hour: VIP pays $13.50 at satisfaction 40. Final: $62.10, average 71.0, VICTORY.
-end note
-@enduml
-
-```
-
-<details><summary>Tool output</summary>
-
-```text
-File created successfully at: /mnt/user-data/outputs/stage-3-sequence.puml (file state is current in your context — no need to Read it back)
-```
-
-</details>
-
-**Tool call: `SendUserFile`**
-
-```json
-{
-  "caption": "The full sequence diagram in one file, with both fixes applied.",
-  "display": "attach",
-  "files": [
-    "/mnt/user-data/outputs/stage-3-sequence.puml"
-  ],
-  "status": "normal"
-}
-```
-
-<details><summary>Tool output</summary>
-
-```text
-1 file delivered to user.
-  /mnt/user-data/outputs/stage-3-sequence.puml → file_uuid: d4e54d75-750b-4045-a54a-82a69374db51
-Each file shows as a card whose position relative to your text depends on the app the user is reading in, so refer to a file by its name, never as above or below.
-```
-
-</details>
-
-I've sent you `stage-3-sequence.puml`, the whole diagram in one file. Copy everything into your `docs/uml/stage-3-sequence.puml`, replacing anything you've already pasted.
-
-It's laid out to be easier to follow than the 8 separate sections:
-- **One `== Turn ==` heading per stage of the story**, in the same order as the plain-words table from before. Turns 1 to 3 now get a short note too, so the timeline starts at turn 1.
-- **`'` comment banners** (participants, turn loop, result check) so you can find your place quickly. They don't appear in the image.
-- **Both fixes are in:** guards in `[ ]`, and `READY -> SERVED` labelled on `order`.
-- **Every state change has a note on its lifeline** (WAITING → SEATED → ORDERED → EATING → READY_TO_PAY), so the markers can follow the VIP without reading the code.
-
-I still couldn't render it here, so press **Option + D** to preview. If anything shows an error or an activation bar looks wrong, paste me the error message or a screenshot and I'll fix it.
-
----
-
-## 41. Yunxi (prompt)  
+## 33. Yunxi (prompt)  
 _2026-11-11 14:21 UTC_
 
 Here are some comments i have : 
@@ -2800,7 +2231,7 @@ check this against the deliverables once again and if possible make it even clea
 
 ---
 
-## 42. Claude (reply)  
+## 34. Claude (reply)  
 _2026-11-11 14:22 UTC_
 
 Attached: `stage-3-sequence.puml`, `stage-3-sequence.puml`
@@ -3128,90 +2559,7 @@ Replace your file with this one, preview it, and send me a screenshot if anythin
 
 ---
 
-## 43. Yunxi (prompt)  
-_2026-11-11 14:25 UTC_
-
-so this file is different fromt he claude outputs already in
-
----
-
-## 44. Claude (reply)  
-_2026-11-11 14:25 UTC_
-
-**Tool call: `mcp__remote-devices__device_bash`**
-
-```bash
-cd $HOME/mnt/sc2002-restaurant-rush && ls -la docs/uml/; wc -l docs/uml/stage-3-sequence.puml; grep -c "SATISFACTION_RECOVERY\|legend top left" docs/uml/stage-3-sequence.puml; ls ~/mnt/ 2>/dev/null
-```
-
-<details><summary>Tool output</summary>
-
-```text
-total 2152
-drwx------ 12 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd    384 Nov 11 13:46 .
-drwx------  8 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd    256 Nov 11 07:01 ..
--rw-------  1 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd 492742 Nov  8 17:07 stage-1-class.png
--rw-------  1 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd   7611 Nov  8 17:07 stage-1-class.puml
--rw-------  1 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd  85593 Nov  8 17:07 stage-1-class.svg
--rw-------  1 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd 566454 Nov  9 09:28 stage-2-class.png
--rw-------  1 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd   8836 Nov  9 09:28 stage-2-class.puml
--rw-------  1 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd  95827 Nov  9 09:28 stage-2-class.svg
--rw-------  1 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd 788320 Nov 11 13:38 stage-3-class.png
--rw-------  1 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd  12630 Nov 11 12:58 stage-3-class.puml
--rw-------  1 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd 123716 Nov 11 13:39 stage-3-class.svg
--rw-------  1 rcw-01najvjrte6fzj7ku6kxmmbd rcw-01najvjrte6fzj7ku6kxmmbd      0 Nov 11 13:47 stage-3-sequence.puml
-0 docs/uml/stage-3-sequence.puml
-0
-sc2002-restaurant-rush
-```
-
-</details>
-
-**Tool call: `mcp__remote-devices__device_commit_files`**
-
-```json
-{
-  "files": [
-    {
-      "fileUuid": "4461141b-1e24-432e-a487-aeed08e1477f",
-      "devicePath": "/Users/ngyunxi/code/sc2002-restaurant-rush/docs/uml/stage-3-sequence.puml"
-    }
-  ]
-}
-```
-
-<details><summary>Tool output</summary>
-
-```text
-Permission for this action was denied by the Claude Code auto mode classifier. Reason: [Irreversible Local Destruction]. If you have other tasks that don't depend on this action, continue working on those. IMPORTANT: You *may* attempt to accomplish this action using other tools that might naturally be used to accomplish this goal, e.g. using head instead of cat. But you *should not* attempt to work around this denial in malicious ways, e.g. do not use your ability to run tests to execute non-test actions. You should only try to work around this restriction in reasonable ways that do not attempt to bypass the intent behind this denial. If you believe this capability is essential to complete the user's request, first try a safer method. Get as much of the rest of the task done as you can, then STOP and explain to the user what you were trying to do and why you need this permission. Let the user decide how to proceed.
-```
-
-</details>
-
-Yes, they're different. I've sent you `stage-3-sequence.puml` twice tonight:
-
-| Version | What it has |
-|---|---|
-| **1st** (22:1x) | The first clean version |
-| **2nd** (the latest) | Your 3 comments applied: all participants at the top, the +15 reason, the `alt` explained, plus the legend and the extra satisfaction notes |
-
-**Use only the 2nd one.** Because both have the same name, the download may arrive as `stage-3-sequence-1.puml` or similar. Open it and check it's the right one: it has a `legend top left` near the top and mentions `SATISFACTION_RECOVERY` in turn 14.
-
-**Your repo file is still empty.** I just checked: `docs/uml/stage-3-sequence.puml` is 0 bytes. I tried to write the new version straight into it, but that permission was declined here, so copy it in yourself:
-
-1. Open the downloaded file and select everything (**Cmd + A**, **Cmd + C**).
-2. Open `docs/uml/stage-3-sequence.puml` in VS Code, paste (**Cmd + V**) and save (**Cmd + S**).
-3. Press **Option + D** to preview it.
-
-Or, from Terminal, if it downloaded to Downloads:
-```bash
-cp ~/Downloads/stage-3-sequence.puml docs/uml/stage-3-sequence.puml
-```
-If the downloaded name ends in `-1`, use that name in the command.
-
----
-
-## 45. Yunxi (prompt)  
+## 35. Yunxi (prompt)  
 _2026-11-11 14:38 UTC_
 
 Attached: `stage-3-sequence.svg`, `stage-3-sequence.svg`
@@ -3222,7 +2570,7 @@ how to futher improve this i really need an A+ for this
 
 ---
 
-## 46. Claude (reply)  
+## 36. Claude (reply)  
 _2026-11-11 14:40 UTC_
 
 Attached: `image-0-0.png`, `image-0-0.png`, `image-0-0.png`, `image-0-0.png`, `image-0-0.png`, `image-0-0.png`, `stage-3-sequence.puml`, `stage-3-sequence.puml`
@@ -3823,7 +3171,7 @@ PlantUML adds the `[ ]` around guard text by itself. Writing your own brackets m
 
 ---
 
-## 47. Yunxi (prompt)  
+## 37. Yunxi (prompt)  
 _2026-11-11 14:52 UTC_
 
 Attached: `stage-3-sequence.png`
@@ -3834,7 +3182,7 @@ why does the bottom half of the png get cut off when i open it
 
 ---
 
-## 48. Claude (reply)  
+## 38. Claude (reply)  
 _2026-11-11 14:52 UTC_
 
 The diagram isn't broken; PlantUML is cropping the PNG. **PlantUML cuts any PNG at 4096 pixels** in width or height, and your diagram is about 5,000 pixels tall, so everything below turn 16 gets cut off. SVGs don't have this limit, which is why your earlier SVG showed the whole thing.
@@ -3867,14 +3215,14 @@ Ask Paige which one fits, since she's putting the diagrams into the PDF.
 
 ---
 
-## 49. Yunxi (prompt)  
+## 39. Yunxi (prompt)  
 _2026-11-11 14:52 UTC_
 
 so does this happen with the jpeg
 
 ---
 
-## 50. Claude (reply)  
+## 40. Claude (reply)  
 _2026-11-11 14:52 UTC_
 
 Yes. PlantUML can't export a JPEG directly. Its image formats are PNG, which is cropped at 4096 pixels, and SVG, which isn't. A JPEG would have to be converted from the PNG, so it would already be cut off.
@@ -3887,14 +3235,14 @@ So:
 
 ---
 
-## 51. Yunxi (prompt)  
+## 41. Yunxi (prompt)  
 _2026-11-11 14:53 UTC_
 
 it says the command is not found
 
 ---
 
-## 52. Claude (reply)  
+## 42. Claude (reply)  
 _2026-11-11 14:53 UTC_
 
 That means the `plantuml` command isn't installed on your Mac. You've been exporting through the VS Code extension, which has its own copy of PlantUML built in. You have two options.
@@ -3926,7 +3274,7 @@ Option 1 is quicker tonight. After exporting, open the PNG and check that it rea
 
 ---
 
-## 53. Yunxi (prompt)  
+## 43. Yunxi (prompt)  
 _2026-11-11 14:56 UTC_
 
 Attached: `Screenshot 2026-11-11 at 10.56.42PM.png`
@@ -3937,7 +3285,7 @@ like add it here?
 
 ---
 
-## 54. Claude (reply)  
+## 44. Claude (reply)  
 _2026-11-11 14:56 UTC_
 
 Yes, put it inside the empty `[ ]` on line 7, in double quotes:
@@ -3960,14 +3308,14 @@ Check that the new PNG goes all the way down to the final "How the manager's cho
 
 ---
 
-## 55. Yunxi (prompt)  
+## 45. Yunxi (prompt)  
 _2026-11-11 14:58 UTC_
 
 it still gets cut off at the same place though
 
 ---
 
-## 56. Claude (reply)  
+## 46. Claude (reply)  
 _2026-11-11 14:58 UTC_
 
 The limit setting probably isn't reaching PlantUML. There are two likely reasons, and one fix that works either way.
@@ -3998,14 +3346,14 @@ Export the PNG again and check that it reaches the bottom note.
 
 ---
 
-## 57. Yunxi (prompt)  
+## 47. Yunxi (prompt)  
 _2026-11-11 14:59 UTC_
 
 ohh i didnt close the entire vs code
 
 ---
 
-## 58. Claude (reply)  
+## 48. Claude (reply)  
 _2026-11-11 14:59 UTC_
 
 Then that's the likely cause. The extension only reads `jarArgs` when it starts, so VS Code has to fully restart.
@@ -4019,14 +3367,14 @@ If it still gets cut off after a full restart, add the `scale max 4000 height` l
 
 ---
 
-## 59. Yunxi (prompt)  
+## 49. Yunxi (prompt)  
 _2026-11-11 15:03 UTC_
 
 omfg i did that and it still got cut off should i check my settings again
 
 ---
 
-## 60. Claude (reply)  
+## 50. Claude (reply)  
 _2026-11-11 15:03 UTC_
 
 Don't spend more time on the settings tonight. Use the fix that doesn't depend on them.
@@ -4047,7 +3395,7 @@ If it **still** cuts off after this, the PNG you're opening isn't the new export
 
 ---
 
-## 61. Yunxi (prompt)  
+## 51. Yunxi (prompt)  
 _2026-11-11 15:07 UTC_
 
 Attached: `UML Sequence Diagram.png`
@@ -4058,7 +3406,7 @@ this is a sample of my seniors sequence diagram should i improve mine anywhere
 
 ---
 
-## 62. Claude (reply)  
+## 52. Claude (reply)  
 _2026-11-11 15:07 UTC_
 
 Mostly no. Your diagram already does more of what **your** brief asks for. Your senior's diagram is useful as a contrast, but it was written for a different assignment with a different requirement, and you don't know what grade it got.
@@ -4094,7 +3442,7 @@ Apart from that, your diagram is done. Re-export it, commit, and send it to Rajv
 
 ---
 
-## 63. Yunxi (prompt)  
+## 53. Yunxi (prompt)  
 _2026-11-11 15:10 UTC_
 
 Attached: `UML Class Diagram.jpg`
@@ -4105,7 +3453,7 @@ how about for the class diagram
 
 ---
 
-## 64. Claude (reply)  
+## 54. Claude (reply)  
 _2026-11-11 15:10 UTC_
 
 Same answer: yours already covers more of what your brief asks for. There's one gap worth fixing.
@@ -4144,14 +3492,14 @@ After adding the two lines, re-export the class diagram, commit it, and you're d
 
 ---
 
-## 65. Yunxi (prompt)  
+## 55. Yunxi (prompt)  
 _2026-11-11 15:15 UTC_
 
 please help check the changes
 
 ---
 
-## 66. Claude (reply)  
+## 56. Claude (reply)  
 _2026-11-11 15:16 UTC_
 
 Attached: `image-0-0.png`, `image-0-0.jpg`, `image-0-0.png`
@@ -4457,14 +3805,14 @@ Then re-export, check the `GameController` area, and commit the `.puml`, `.png` 
 
 ---
 
-## 67. Yunxi (prompt)  
+## 57. Yunxi (prompt)  
 _2026-11-11 15:17 UTC_
 
 are you serious i merged it already
 
 ---
 
-## 68. Claude (reply)  
+## 58. Claude (reply)  
 _2026-11-11 15:17 UTC_
 
 **Tool call: `mcp__remote-devices__device_bash`**
@@ -4522,14 +3870,14 @@ git push origin stage-3
 
 ---
 
-## 69. Yunxi (prompt)  
+## 59. Yunxi (prompt)  
 _2026-11-11 15:20 UTC_
 
 can you check through the whole repo again, any other code that needs to be changed
 
 ---
 
-## 70. Claude (reply)  
+## 60. Claude (reply)  
 _2026-11-11 15:21 UTC_
 
 **Tool call: `mcp__remote-devices__device_bash`**
@@ -4940,14 +4288,14 @@ Put items 2 and 3 and the tidy-ups in one branch and one PR, merge it, and then 
 
 ---
 
-## 71. Yunxi (prompt)  
+## 61. Yunxi (prompt)  
 _2026-11-11 15:22 UTC_
 
 so i have to do 2 and 3 before 1
 
 ---
 
-## 72. Claude (reply)  
+## 62. Claude (reply)  
 _2026-11-11 15:22 UTC_
 
 Yes. Do 2 and 3 first, then tag last.
@@ -4983,7 +4331,7 @@ Check it worked: the `stage-3` link and the `stage-2...stage-3` compare link in 
 
 ---
 
-## 73. Yunxi (prompt)  
+## 63. Yunxi (prompt)  
 _2026-11-11 15:26 UTC_
 
 Attached: `Screenshot 2026-11-11 at 11.26.15PM.png`
@@ -4994,7 +4342,7 @@ whats going on
 
 ---
 
-## 74. Claude (reply)  
+## 64. Claude (reply)  
 _2026-11-11 15:26 UTC_
 
 You committed straight onto `main`, because the `git checkout -b` step was skipped. The prompt shows `[main eb8a1bb]`. Then `git push` was asked to push a branch called `stage3-final-edits`, which doesn't exist yet, so git said "does not match any".
@@ -5021,7 +4369,7 @@ One check: that commit says **1 file changed**, so it only includes the README. 
 
 ---
 
-## 75. Yunxi (prompt)  
+## 65. Yunxi (prompt)  
 _2026-11-11 15:28 UTC_
 
 Attached: `excerpt_from_previous_claude_message.txt`, `excerpt_from_previous_claude_message.txt`
@@ -5032,7 +4380,7 @@ expand on these by telling me the line number
 
 ---
 
-## 76. Claude (reply)  
+## 66. Claude (reply)  
 _2026-11-11 15:28 UTC_
 
 **Tool call: `Bash`**
