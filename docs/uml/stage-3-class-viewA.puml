@@ -1,0 +1,215 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide empty members
+skinparam defaultFontSize 13
+skinparam dpi 100
+skinparam backgroundColor white
+skinparam nodesep 20
+skinparam ranksep 35
+title Stage 3 class diagram (view A): customers, menu, orders and pricing
+class Customer <<entity>> {
+  - customerId : int {readOnly}
+  - satisfaction : int
+  - state : CustomerState
+  + Customer(customerId : int)
+  + chooseItem(menu : MenuItem[]) : MenuItem
+  + getWaitingLoss() : int
+  + getDiscountRate() : double
+  + getCustomerType() : String
+  + seat() : void
+  + placeOrder(order : Order) : void
+  + markServed() : void
+  + finishEating() : void
+  + markPaid() : void
+  + leave() : void
+  + loseWaitingSatisfaction() : void
+  + hasLeft() : boolean
+  + recoverHappyHourSatisfaction() : void
+  - requireState(required : CustomerState, action : String) : void
+}
+class VIPCustomer <<entity>> {
+  + VIPCustomer(customerId : int)
+  + getWaitingLoss() : int
+  + getDiscountRate() : double
+  + getCustomerType() : String
+}
+class CriticCustomer <<entity>> {
+  + CriticCustomer(customerId : int)
+  + getWaitingLoss() : int
+  + getCustomerType() : String
+  + chooseItem(menu : MenuItem[]) : MenuItem
+}
+class Order <<entity>> {
+  - {static} nextOrderNumber : int 
+  - orderNumber : int {readOnly}
+  - billCents : int {readOnly}
+  - happyHourPrice : boolean {readOnly}
+  - unitsDone : int
+  - status : OrderStatus
+  + Order(customer : Customer, item : MenuItem)
+  + Order(customer : Customer, item : MenuItem, happyHour : HappyHour)
+  + isHappyHourPrice() : boolean
+  + canAdvance() : boolean
+  + advanceOneUnit() : boolean
+  + markServed() : void 
+  + markPaid() : void
+  + cancel() : void
+  + isReady() : boolean
+  + canCancel() : boolean
+  + getUnitsRemaining() : int
+  + getProgress() : String
+  + getBillDisplay() : String
+  + toString(): String
+  - requireStatus(required : OrderStatus, action : String) : void
+}
+class MenuItem <<entity>> {
+  - name : String {readOnly}
+  - priceCents : int {readOnly}
+  - prepUnits : int {readOnly}
+  + MenuItem(name : String, priceCents : int, prepUnits : int)
+  + getPriceDisplay() : String
+  + toString() : String
+}
+class ComboMeal <<entity>> {
+  + {static} PRICE_PERCENT : int = 90 {readOnly}
+  + ComboMeal(first : MenuItem, second : MenuItem)
+  + getComponents() : List<MenuItem>
+  + getSeparatePriceCents() : int
+  + toString() : String
+  - {static} comboName(first : MenuItem, second : MenuItem) : String
+  - {static} comboPriceCents(first : MenuItem, second : MenuItem) : int
+}
+class HappyHour <<entity>> {
+  + {static} DISCOUNT_PERCENT : int = 20 {readOnly}
+  + {static} DURATION_TURNS : int = 2 {readOnly}
+  + {static} SATISFACTION_RECOVERY : int = 15 {readOnly}
+  - used : boolean
+  - turnsRemaining : int
+  + canActivate() : boolean
+  + activate() : void
+  + isActive() : boolean
+  + getTurnsRemaining() : int
+  + hasBeenUsed() : boolean
+  + endTurn() : void
+  + applyTo(cents : int) : int
+  + toString() : String
+}
+class Menu <<entity>> {
+  + {static} SALAD : String = "Salad" {readOnly}
+  + {static} BURGER : String = "Burger" {readOnly}
+  + {static} PASTA : String = "Pasta" {readOnly}
+  + Menu()
+  + getItems() : List<MenuItem>
+  + getItem(index : int) : MenuItem
+  + findByName(name : String) : MenuItem
+  + size() : int
+  + toString() : String
+}
+enum CustomerState <<enumeration>> {
+  WAITING
+  SEATED
+  ORDERED
+  EATING
+  READY_TO_PAY
+  PAID
+  LEFT
+}
+enum OrderStatus <<enumeration>> {
+  IN_PREPARATION
+  READY
+  SERVED
+  PAID
+  CANCELLED
+  --
+  - label : String {readOnly}
+  + isCancellable() : boolean
+  + isClosed() : boolean
+}
+class Money <<utility>> {
+  - Money()
+  + {static} format(cents : int) : String
+  + {static} percentOff(cents : int, percent : int) : int
+  + {static} applyDiscountRate(cents : int, rate : double) : int
+}
+class IllegalOrderStateException <<exception>> {
+  - {static} serialVersionUID : long = 1L {readOnly}
+  + IllegalOrderStateException(message : String)
+}
+class RuntimeException <<java.lang>>
+class IllegalStateException <<java.lang>>
+Menu "1" *-- "5" MenuItem : items
+ComboMeal "*" o-- "2" MenuItem : first, second
+Order "*" --> "1" MenuItem : item
+Customer "1" -- "0..1" Order : order / customer
+IllegalOrderStateException --|> IllegalStateException
+IllegalStateException --|> RuntimeException
+VIPCustomer --|> Customer
+CriticCustomer --|> Customer
+ComboMeal --|> MenuItem
+Customer .[#999999].> MenuItem : chooses
+Order .[#999999].> HappyHour
+Customer .[#999999].> HappyHour
+Menu .[#999999].> ComboMeal : <<create>>
+Order .[#999999].> IllegalOrderStateException : <<throws>>
+HappyHour .[#999999].> IllegalStateException : <<throws>>
+MenuItem .[#999999].> Money
+Order .[#999999].> Money
+HappyHour .[#999999].> Money
+ComboMeal .[#999999].> Money
+Customer .[#999999].> CustomerState
+Order .[#999999].> OrderStatus
+note right of Customer
+  <b>Encapsulation</b>
+  State changes only through seat(), placeOrder(),
+  markServed(), finishEating(), markPaid(), leave().
+  Each checks the current state first via private
+  requireState(), so no class can skip a step
+  (e.g. WAITING straight to PAID).
+  recoverHappyHourSatisfaction() changes satisfaction
+  only, never state, and is capped at 100.
+end note
+note bottom of VIPCustomer
+  <b>Polymorphism (inheritance + overriding)</b>
+  VIPCustomer overrides getWaitingLoss(),
+  getDiscountRate(), getCustomerType().
+  CriticCustomer overrides getWaitingLoss(),
+  getCustomerType(), chooseItem().
+  GameController and ConsoleUI only call Customer
+  methods; there is no instanceof anywhere.
+  Critic's "most expensive item" now includes combos
+  with no change to its code.
+end note
+note bottom of Order
+  <b>Encapsulation</b>
+  billCents is final: the price is locked when
+  the order is taken. Customer discount first,
+  then Happy Hour 20% off if active
+  (VIP Burger: $15.00 -> $13.50 -> $10.80).
+  HappyHour is only read in the constructor,
+  so it is a dependency, not a field.
+  Status changes are guarded by requireStatus().
+end note
+note right of MenuItem
+  <b>Polymorphism</b>
+  MenuItem, ComboMeal and Order override
+  Object.toString().
+  Staff catch IllegalOrderStateException; Main
+  catches GameQuitException (both RuntimeException
+  subtypes).
+end note
+note bottom of ComboMeal
+  <b>Inheritance + aggregation</b>
+  A ComboMeal is a MenuItem made of 2 MenuItems,
+  so Customer, Order and Chef handle it like any
+  dish. Price (90% of both) and prep units (sum)
+  are fixed in the constructor.
+  The same Salad object is shared by Menu and
+  both combos, hence aggregation, not composition.
+end note
+note right of HappyHour
+  <b>Encapsulation</b>
+  Once per game: activate() throws if already used.
+  Lasts 2 turns; endTurn() counts down.
+  applyTo() is the only place the 20% is applied.
+end note
+@enduml

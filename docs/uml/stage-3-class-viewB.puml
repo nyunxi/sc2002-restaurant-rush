@@ -1,0 +1,187 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide empty members
+skinparam defaultFontSize 13
+skinparam dpi 100
+skinparam backgroundColor white
+skinparam nodesep 20
+skinparam ranksep 35
+title Stage 3 class diagram (view B): boundary, control and staff\n(domain classes from view A shown by name only)
+class Table <<entity>> {
+  - tableId : int {readOnly}
+  + Table(tableId : int)
+  + isFree() : boolean
+  + seat(c : Customer) : ActionResult
+  + free() : void
+}
+class Customer <<entity>>
+class VIPCustomer <<entity>>
+class CriticCustomer <<entity>>
+class Order <<entity>>
+class MenuItem <<entity>>
+class Host <<entity>> {
+  - hasActed : boolean
+  + startTurn() : void
+  + hasActed() : boolean
+  + seat(c : Customer, t : Table) : ActionResult
+}
+class HappyHour <<entity>>
+class Menu <<entity>>
+class GameController <<control>> {
+  + {static} TOTAL_TURNS : int = 18 {readOnly}
+  - {static} ARRIVAL_TURNS : int[] = {1, 4, 7, 10, 13, 16} {readOnly}
+  - {static} VIP_CUSTOMER_ID : int = 2 {readOnly}
+  - {static} CRITIC_CUSTOMER_ID : int = 4 {readOnly}
+  - servedOnTurn : Map<Order, Integer> {readOnly}
+  - turn : int
+  - nextCustomerId : int
+  - unhappyDepartures : int
+  - waiterDone : boolean
+  - turnInProgress : boolean
+  + GameController(menu : MenuItem[])
+  + startTurn() : void
+  + waiterSeat(c : Customer, t : Table) : ActionResult
+  + waiterTakeOrder(c : Customer) : ActionResult
+  + waiterServe(o : Order) : ActionResult
+  + waiterWait() : void
+  + chefPrepare(o : Order) : ActionResult
+  + canHostSeat() : boolean
+  + hostSeat(c : Customer, t : Table) : ActionResult
+  + canActivateHappyHour() : boolean
+  + activateHappyHour() : ActionResult
+  + isHappyHourActive() : boolean
+  + isHappyHourUsed() : boolean
+  + getHappyHourTurnsRemaining() : int
+  + endTurn() : void
+  + isGameOver() : boolean
+  + isVictory() : boolean
+  + getQueue() : List<Customer>
+  + getTables() : List<Table>
+  + getOrders() : List<Order>
+  + getCustomers() : List<Customer>
+  + getMenu() : MenuItem[]
+  - payOldestReadyCustomer() : void
+  - finishEating() : void
+  - applyWaitingLoss() : void
+  - leave(c : Customer) : void
+  - tableOf(c : Customer) : Table
+  - createCustomer(id : int) : Customer
+  - hasFreeTable() : boolean
+  - recoverWaitingCustomers() : void
+}
+class Waiter <<entity>> {
+  - hasActed : boolean
+  + startTurn() : void
+  + seat(c : Customer, t : Table) : ActionResult
+  + takeOrder(c : Customer, menu : MenuItem[], orders : List<Order>, happyHour : HappyHour) : ActionResult
+  + serve(o : Order) : ActionResult
+}
+class Chef <<entity>> {
+  - hasActed : boolean
+  + startTurn() : void
+  + prepare(o : Order) : ActionResult
+}
+class Cashier <<entity>> {
+  - hasActed : boolean 
+  - paidCount : int 
+  - revenueCents : int
+  - satisfactionTotal : int 
+  + startTurn() : void
+  + processPayment(o : Order, t : Table) : ActionResult
+  + getAverageSatisfaction() : double
+}
+class ActionResult <<entity>> {
+  - success : boolean {readOnly}
+  - reason : String {readOnly}
+  + ActionResult(success : boolean, reason : String)
+  + {static} ok() : ActionResult
+  + {static} fail(reason : String) : ActionResult
+}
+class ConsoleUI <<boundary>> {
+  + ConsoleUI(game : GameController, input : InputReader)
+  + run() : void
+  + {static} formatCents(cents : int) : String
+  - showTurnState() : void
+  - showMenu() : void
+  - askHappyHour() : void
+  - askHost() : void
+  - happyHourStatus() : String
+  - askWaiter() : void
+  - askChef() : void
+  - showTurnResults() : void
+  - showFinalResult() : void
+}
+class InputReader <<boundary>> {
+  - scanner : Scanner {readOnly}
+  + InputReader(scanner : Scanner)
+  + readInt(prompt : String, min : int, max : int) : int
+}
+class Main <<boundary>> {
+  + {static} main(args : String[]) : void
+}
+class Money <<utility>>
+class GameQuitException <<exception>> {
+  - {static} serialVersionUID : long = 1L {readOnly}
+  + GameQuitException(reason : String)
+}
+class RuntimeException <<java.lang>>
+GameController "1" *-- "2" Table : tables
+GameController "1" *-- "1" Waiter : waiter
+GameController "1" *-- "1" Chef : chef
+GameController "1" *-- "1" Cashier : cashier
+GameController "1" *-- "0..6" Customer : customers
+GameController "1" *-- "1" Host : host
+GameController "1" *-- "1" HappyHour : happyHour
+GameController "0..1" --> "*" Customer : queue
+GameController "1" --> "*" Order : orders
+GameController --> "1..*" MenuItem : menu
+Table "0..1" --> "0..1" Customer : customer
+ConsoleUI "1" --> "1" GameController : game
+ConsoleUI "1" --> "1" InputReader : input
+GameQuitException --|> RuntimeException
+Main .[#999999].> Menu : <<create>>
+Main .[#999999].> GameController : <<create>>
+Main .[#999999].> InputReader : <<create>>
+Main .[#999999].> ConsoleUI : <<create>>
+Main .[#999999].> GameQuitException : catches
+Waiter .[#999999].> Order : <<create>>
+Waiter .[#999999].> Customer
+Waiter .[#999999].> Table
+Chef .[#999999].> Order
+Cashier .[#999999].> Order
+Cashier .[#999999].> Table
+Host .[#999999].> Customer
+Host .[#999999].> Table
+Waiter .[#999999].> HappyHour
+Waiter .[#999999].> ActionResult : <<create>>
+Chef .[#999999].> ActionResult : <<create>>
+Cashier .[#999999].> ActionResult : <<create>>
+Table .[#999999].> ActionResult : <<create>>
+GameController .[#999999].> ActionResult : <<create>>
+GameController .[#999999].> VIPCustomer : <<create>>
+GameController .[#999999].> CriticCustomer : <<create>>
+ConsoleUI .[#999999].> ActionResult
+Host .[#999999].> ActionResult : <<create>>
+InputReader .[#999999].> GameQuitException : <<throws>>
+ConsoleUI .[#999999].> Money
+note left of GameController
+  <b>Composition</b>
+  Creates and owns the 2 Tables, the staff
+  (Host, Waiter, Chef, Cashier), the HappyHour
+  and every Customer for the whole game.
+  <b>Single creation point</b>
+  createCustomer() is the only place that names
+  the Customer subclasses (customer 2 VIP, 4 Critic).
+  <b>Encapsulation</b>
+  getQueue(), getTables(), getOrders(), getCustomers()
+  return unmodifiable lists; getMenu() returns a copy.
+  turnInProgress and waiterDone limit Happy Hour
+  to the start of a turn.
+end note
+note right of Host
+  <b>Single responsibility</b>
+  Seats at most 1 customer per turn and does not
+  use the Waiter's task. A separate class, not a
+  Staff superclass (see design discussion).
+end note
+@enduml
