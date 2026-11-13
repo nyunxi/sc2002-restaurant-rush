@@ -66,10 +66,17 @@ Each file in `tests/` holds one answer per line, so a run can be replayed exactl
 
 ```
 java -cp out restaurantrush.Main < tests/victory.txt
+java -cp out restaurantrush.Main < tests/victory-no-happy-hour.txt
 java -cp out restaurantrush.Main < tests/defeat.txt
 ```
 
+`victory-no-happy-hour.txt` is `victory.txt` with one choice changed: Happy Hour is declined at turn 14. It shows how that single decision changes the result (still a victory, but average satisfaction falls from 82.5 to 71.0 and the Critic leaves).
+
 Expected results and the brief rule each run checks: [Stage 1 notes](docs/test-notes-stage1.md) (for `stage-1`), [Stage 2 notes](docs/test-notes-stage2.md) (for `stage-2`), [Stage 3 notes](docs/test-notes-stage3.md) (for `stage-3`, current).
+
+**Added after the `stage-3` tag** (on `main`; the game code is unchanged from `stage-3`):
+- `tests/victory-no-happy-hour.txt`: the comparison run above
+- `docs/uml/stage-3-class-viewA.puml`, `docs/uml/stage-3-class-viewB.puml`: the Stage 3 class diagram split into two views for the report (the same model as `stage-3-class.puml`)
 
 ## Stage 1 to 2 changes 
 Compare: https://github.com/nyunxi/sc2002-restaurant-rush/compare/stage-1...stage-2
