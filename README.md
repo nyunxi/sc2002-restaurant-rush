@@ -78,6 +78,33 @@ Expected results and the brief rule each run checks: [Stage 1 notes](docs/test-n
 - `tests/victory-no-happy-hour.txt`: the comparison run above
 - `docs/uml/stage-3-class-viewA.puml`, `docs/uml/stage-3-class-viewB.puml`: the Stage 3 class diagram split into two views for the report (the same model as `stage-3-class.puml`)
 
+## Video Walkthrough
+
+**Video file:** `SC2002 Restaurant Rush Video Presentation.mp4` (included in the submission zip)
+**Length:** 15:00
+**Recorded against:** the `stage-3` tag
+
+| Time | Segment | Presenter |
+|------|---------|-----------|
+| | **1. Game overview and the three stages** | |
+| 0:00 | 1.1 Game overview and the three stages | Rajvi |
+| 1:15 | 1.2 Game launching from the submitted project | Rajvi |
+| | **2. Gameplay demonstration and key outcomes** | |
+| 1:50 | 2.1 Manager choices and constrained staff | Yun Xi |
+| 3:05 | 2.2 A dish going READY → SERVED → payment | Enoch |
+| 4:55 | 2.3 One victory and one defeat | Rajvi |
+| | **3. Class diagrams and evidence of stage changes** | |
+| 6:11 | 3.1 Final class diagram, responsibilities and cohesion | Paige |
+| 7:25 | 3.2 Stage 1 → 2: VIP and Critic | Paige |
+| 8:06 | 3.3 Stage 2 → 3: ComboMeal and Happy Hour pricing | Enoch |
+| 9:05 | 3.4 Stage 2 → 3: Host, Happy Hour turn flow and tags | Yun Xi |
+| | **4. Selected use case and sequence diagram** | |
+| 10:05 | 4.1 Selected use case | Paige |
+| 11:13 | 4.2 Sequence diagram | Yun Xi |
+| 12:15 | 4.3 Trade-offs and an alternative design | Enoch |
+| | **5. Individual contributions and key learning** | |
+| 12:55 | 5. Individual reflections | Paige, Enoch, Rajvi, Yun Xi |
+
 ## Stage 1 to 2 changes 
 Compare: https://github.com/nyunxi/sc2002-restaurant-rush/compare/stage-1...stage-2
 
